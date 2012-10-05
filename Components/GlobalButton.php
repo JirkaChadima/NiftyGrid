@@ -87,6 +87,7 @@ class GlobalButton extends \Nette\Application\UI\PresenterComponent
 			->href($this->getLink())
 			->setClass($this->class)
 			->addClass("grid-button")
+			->addClass('btn')
 			->addClass("grid-global-button")
 			->setTitle($this->label);
 

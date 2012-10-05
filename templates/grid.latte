@@ -12,20 +12,30 @@
 {if !$control->isSubGrid}
 {$control['gridForm']->render('begin')}
 {/if}
-<table n:attr="style => $control->width ? 'width: '.$control->width.';'" class="grid">
+<table n:attr="style => $control->width ? 'width: '.$control->width.';'" class="grid table table-striped table-bordered table-condensed">
 	<thead>
 		<tr class="grid-panel">
 			<th colspan="{$colsCount}">
 				<div class="grid-upper-panel">
+				<span n:if="$paginate" class="grid-perPage">
+						{$control['gridForm'][$control->name]['perPage']['perPage']->label}
+						{$control['gridForm'][$control->name]['perPage']['perPage']->getControl()}
+						{$control['gridForm'][$control->name]['perPage']['send']->getControl()}
+				</span>
 					<div n:if="$control->hasGlobalButtons()">
 						{foreach $globalButtons as $globalButton}
 							{control $globalButton}
 						{/foreach}
 					</div>
 					<div class="grid-upper-info">
-						<a n:href="this" class="grid-current-link" title="Získat odkaz na tuto stránku"></a>
+						<a n:href="this" class="grid-current-link" title="{_'Get link to this page'}"></a>
 						<div class="grid-results">
-							celkem {$results} {($results == 1) ? "záznam" : (($results >= 2 && $results <= 4) ? "záznamy" : "záznamů")}{if $paginate} {if (boolean)$results}(Zobrazeno {$viewedFrom} až {$viewedTo}){/if}{/if}
+							{!_'Total <strong>%s</strong> values', array($results . '')}
+						 {if $paginate && is_numeric($perPage)}
+							{if (boolean)$results}
+								{_'(Viewing %s to %s values)', array($viewedFrom, $viewedTo)}
+							{/if}
+						{/if}
 						</div>
 					</div>
 				</div>
@@ -44,15 +54,23 @@
 			</th>
 		</tr>
 		<tr>
-			<th n:if="$control->hasActionForm()" style="text-align:center; width: 16px;" class="grid-head-column"><input type="checkbox" class="grid-select-all" title="Označit/odznačit všechny záznamy"></th>
+			<th n:if="$control->hasActionForm()" style="text-align:center; width: 16px;" class="grid-head-column"><input type="checkbox" class="grid-select-all" title="{_'Mark/Unmark all records'}"></th>
 			<th n:foreach="$subGrids as $subGrid" style="width: 26px;" class="grid-head-column"></th>
-			<th n:foreach="$columns as $column" n:attr="style => $column->width ? 'width: '.$column->width.';'" class="grid-head-column">{if $control->hasEnabledSorting() && $column->isSortable()}{var $order = ($control->order == $column->name.' ASC') ? " DESC" : " ASC"}<a n:href="this, 'order' => $column->name.$order" class="grid-ajax" title="Obrátit řazení">{$column->label}</a>{else}{$column->label}{/if}
+			<th n:foreach="$columns as $column" n:attr="style => $column->width ? 'width: '.$column->width.';'" class="grid-head-column">
 				<div class="grid-order" n:if="$column->isSortable() && $control->hasEnabledSorting()">
-					<a n:href="this, 'order' => $column->name.' ASC'" n:class="grid-ajax, grid-order-up ,($control->order && ($control->order == $column->name.' ASC')) ? grid-order-active-up" title="Řadit vzestupně"></a>
-					<a n:href="this, 'order' => $column->name.' DESC'" n:class="grid-ajax, grid-order-down ,($control->order && ($control->order == $column->name.' DESC')) ? grid-order-active-down" title="Řadit sestupně"></a>
+					<a n:href="this, 'order' => $column->name.' ASC'" n:class="grid-ajax, grid-order-up ,($control->order && ($control->order == $column->name.' ASC')) ? grid-order-active-up" title="{_'Sort asc'}"></a>
+					<a n:href="this, 'order' => $column->name.' DESC'" n:class="grid-ajax, grid-order-down ,($control->order && ($control->order == $column->name.' DESC')) ? grid-order-active-down" title="{_'Sort desc'}"></a>
+				</div>
+				<div class="grid-head-column-content">
+			{if $control->hasEnabledSorting() && $column->isSortable()}
+				{var $order = ($control->order == $column->name.' ASC') ? " DESC" : " ASC"}
+				<a n:href="this, 'order' => $column->name.$order" class="grid-ajax" title="{_'Change sorting'}">{$column->label}</a>
+			{else}
+				{$column->label}
+			{/if}
 				</div>
 			</th>
-			<th n:if="$control->hasButtons() || $control->hasFilterForm()" class="grid-head-column">Akce</th>
+			<th n:if="$control->hasButtons() || $control->hasFilterForm()" class="grid-head-column grid-head-column-actions">{_"Actions"}</th>
 		</tr>
 		<tr n:if="$control->hasFilterForm()">
 			<th n:if="$control->hasActionForm()" class="grid-filter-form"></th>
@@ -62,7 +80,7 @@
 					{$control['gridForm'][$control->name]['filter'][$column->name]->getControl()}
 				{/if}
 			</th>
-			<th class="grid-filter-form">{$control['gridForm'][$control->name]['filter']['send']->getControl()}<a n:if="$control->hasActiveFilter()" n:href="this, filter => NULL, paginator-page => NULL" title="Zrušit filtr" class="grid-filter-reset grid-ajax"></a></th>
+			<th class="grid-filter-form">{$control['gridForm'][$control->name]['filter']['send']->getControl()}<a n:if="$control->hasActiveFilter()" n:href="this, filter => NULL, paginator-page => NULL" title="{_"Cancel filter"}" class="grid-filter-reset grid-ajax btn btn-primary btn-small"></a></th>
 		</tr>
 	</thead>
 	<tbody>
@@ -76,7 +94,7 @@
 			</td>
 			<td class="grid-row-cell grid-edited-cell">
 				{$control['gridForm'][$control->name]['rowForm']['send']->getControl()}
-				<a class="grid-rowForm-cancel grid-ajax" n:href="this" title="Zrušit editaci"></a>
+				<a class="grid-rowForm-cancel grid-ajax" n:href="this" title="{_"Cancel editing"}"></a>
 			</td>
 		</tr>
 		{if count($rows)}
@@ -96,7 +114,7 @@
 			<td n:if="$control->hasButtons() || $control->hasFilterForm()" n:attr="class => array(grid-row-cell, $control->isEditable() && $control->activeRowForm == $row[$primaryKey] ? 'grid-edited-cell')">
 				{if $control->activeRowForm == $row[$primaryKey] && $control->isEditable()}
 					{$control['gridForm'][$control->name]['rowForm']['send']->getControl()}
-					<a class="grid-rowForm-cancel grid-ajax" n:href="this" title="Zrušit editaci"></a>
+					<a class="grid-rowForm-cancel grid-ajax" n:href="this" title="{_"Cancel editing"}"></a>
 					{$control['gridForm'][$control->name]['rowForm'][$primaryKey]->getControl()}
 				{else}
 					{foreach $buttons as $button}
@@ -118,21 +136,16 @@
 		{/if}
 	</tbody>
 	<tfoot>
-		<tr>
-			<td colspan="{$colsCount}" class="grid-bottom">
+		<tr n:if="$control->hasActionForm()" >
+			<td colspan="{$colsCount}">
 				<span n:if="$control->hasActionForm()" class="grid-action-box">
 						{$control['gridForm'][$control->name]['action']['action_name']->label}
 						{$control['gridForm'][$control->name]['action']['action_name']->getControl()}
 						{$control['gridForm'][$control->name]['action']['send']->getControl()}
 				</span>
-				<span n:if="$paginate" class="grid-perPage">
-						{$control['gridForm'][$control->name]['perPage']['perPage']->label}
-						{$control['gridForm'][$control->name]['perPage']['perPage']->getControl()}
-						{$control['gridForm'][$control->name]['perPage']['send']->getControl()}
-				</span>
 			</td>
 		</tr>
-		<tr n:if="$paginate" class="grid-panel">
+		<tr n:if="$paginate && is_numeric($perPage)" class="grid-panel grid-bottom">
 			<td colspan="{$colsCount}">
 				{control paginator}
 			</td>
