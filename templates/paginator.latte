@@ -9,29 +9,31 @@
 */
 *}
 {if $paginator->pageCount > 1}
-<div class="grid-paginator">
+<div class="pagination grid-paginator pagination-centered">
 	{foreach range($paginator->getBase(), $paginator->getPageCount()) as $page}
 	{/foreach}
+	<ul>
 	{if !$paginator->isFirst()}
-		<a href="{link this, 'page' => $paginator->getFirstPage()}" class="grid-ajax">&lt;&lt;</a>
+		<li><a href="{link this, 'page' => $paginator->getFirstPage()}" class="grid-ajax">&lt;&lt;</a></li>
 	{else}
-		<span>&lt;&lt;</span>
+		<li class="disabled"><span>&lt;&lt;</span></li>
 	{/if}
 	{if $paginator->getPage() - 1 >= $paginator->getFirstPage()}
-		<a href="{link this, 'page' => $paginator->getPage() - 1}" class="grid-ajax">&lt;</a>
+		<li><a href="{link this, 'page' => $paginator->getPage() - 1}" class="grid-ajax">&lt;</a></li>
 	{else}
-		<span>&lt;</span>
+		<li class="disabled"><span>&lt;</span></li>
 	{/if}
-	<span class="grid-current" data-lastpage="{$paginator->getLastPage()}">{$paginator->getPage()}</span>
+		<li class="active"><span class="grid-current" data-lastpage="{$paginator->getLastPage()}">{$paginator->getPage()}</span></li>
 	{if $paginator->getPage() + 1 <= $paginator->getLastPage()}
-		<a href="{link this, 'page' => $paginator->getPage() + 1}" class="grid-ajax">&gt;</a>
+		<li><a href="{link this, 'page' => $paginator->getPage() + 1}" class="grid-ajax">&gt;</a></li>
 	{else}
-		<span>&gt;</span>
+		<li class="disabled"><span>&gt;</span></li>
 	{/if}
 	{if !$paginator->isLast()}
-		<a href="{link this, 'page' => $paginator->getLastPage()}" class="grid-ajax">&gt;&gt;</a>
+		<li><a href="{link this, 'page' => $paginator->getLastPage()}" class="grid-ajax">&gt;&gt;</a></li>
 	{else}
-		<span>&gt;&gt;</span>
+		<li class="disabled"><span>&gt;&gt;</span></li>
 	{/if}
+	</ul>
 </div>
 {/if}
