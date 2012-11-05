@@ -9,7 +9,7 @@
  */
 namespace NiftyGrid;
 
-class Grid extends \Nette\Application\UI\Control
+abstract class Grid extends \Nette\Application\UI\Control
 {
 	const ROW_FORM = "rowForm";
 
@@ -143,6 +143,8 @@ class Grid extends \Nette\Application\UI\Control
 		}
 		$this->count = $this->getCount();
 	}
+	
+	abstract protected function configure($presenter);
 
 	/**
 	 * @param string $subGrid
