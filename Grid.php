@@ -16,7 +16,7 @@ class Grid extends \Nette\Application\UI\Control
 	const ADD_ROW = "addRow";
 
 	/** @persistent array */
-	public $filter;
+	public $filter = array();
 
 	/** @persistent string */
 	public $order;
@@ -591,7 +591,7 @@ class Grid extends \Nette\Application\UI\Control
 	{
 		try{
 			$order = explode(" ", $order);
-			if(in_array($order[0], $this->getColumnNames()) && in_array($order[1], array("ASC", "DESC")) && $this['columns']->components[$order[0]]->isSortable()){
+			if(in_array($order[0], $this->getColumnNames()) && in_array($order[1], array("ASC", "DESC")) && $this['columns-'.$order[0]]->isSortable()){
 				if(!empty($this['columns-'.$order[0]]->tableName)){
 					$order[0] = $this['columns-'.$order[0]]->tableName;
 				}
