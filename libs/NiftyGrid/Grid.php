@@ -734,7 +734,7 @@ abstract class Grid extends \Nette\Application\UI\Control {
 				->addData("select", $form[$this->name]["action"]["action_name"]->getControl()->name);
 
 		$form[$this->name]->addContainer('perPage');
-		$form[$this->name]['perPage']->addSelect("perPage", _("Records per page:"), $this->perPageValues)
+		$form[$this->name]['perPage']->addSelect("perPage", _("Records per page"), $this->perPageValues)
 				->getControlPrototype()
 				->addClass("grid-changeperpage")
 				->addData("gridname", $this->getGridPath())

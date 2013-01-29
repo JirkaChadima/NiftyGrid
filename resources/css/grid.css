@@ -3,19 +3,6 @@ form.grid-gridForm {
 	border: 0;
 }
 
-.grid .grid-upper-panel{
-    color: #FFF;
-    font-weight: normal;
-}
-
-.grid .grid-upper-info{
-    float:right;
-	border: 1px solid black;
-	-webkit-border-radius: 4px;
-	-moz-border-radius: 4px;
-	border-radius: 4px;
-}
-
 .grid .grid-row-even:hover td, .grid .grid-row-odd:hover td {
 	background-color: #dedede;
 }
@@ -24,19 +11,26 @@ form.grid-gridForm {
 	background-color: #f9f9f9;
 }
 
+.grid .grid-upper-info {
+	line-height: 30px;
+	height: 30px;
+}
+
 .grid .grid-current-link{
-    background: url("../images/link.png") no-repeat 3px 3px;
-    width:21px;
-    height:21px;
+    background: url("../images/link.png") no-repeat 9px 7px;
+    width:20px;
+    height:30px;
     display:inline-block;
-    float:left;
+    float:right;
+	border-left: 1px solid #555;
+	margin-left: 6px;
+	padding-left: 6px;
 }
 
 .grid .grid-results{
-    background-color: #000;
-    height: 19px;
-    padding: 3px 10px;
-    margin-left:28px;
+	float: left;
+	margin: 0;
+	padding: 0;
  }
 
 .grid .grid-order{
@@ -84,10 +78,13 @@ form.grid-gridForm {
 }
 
 .grid .grid-perPage label{
-    float: left;
+	float: left;
 	color: black;
     font-size: 14px;
+	font-weight: bold;
+	color: #555;
     line-height: 30px;
+	margin-bottom: 0;
     margin-right: 10px;
 }
 
