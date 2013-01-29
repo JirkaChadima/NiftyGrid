@@ -719,12 +719,12 @@ abstract class Grid extends \Nette\Application\UI\Control {
 
 		$form[$this->name]->addContainer("rowForm");
 		$form[$this->name]['rowForm']->addSubmit("send", _("Save"));
-		$form[$this->name]['rowForm']['send']->getControlPrototype()->addClass("grid-editable");
+		$form[$this->name]['rowForm']['send']->getControlPrototype()->addClass("grid-editable btn btn-primary btn-small");
 
 		$form[$this->name]->addContainer("filter");
 		$form[$this->name]['filter']->addSubmit("send", _("Filter"))
-				->setAttribute('class', 'btn btn-primary btn-small')
 				->setValidationScope(FALSE);
+		$form[$this->name]['filter']['send']->getControlPrototype()->addClass('btn btn-primary btn-small');
 
 		$form[$this->name]->addContainer("action");
 		$form[$this->name]['action']->addSelect("action_name", _("Mark:"));

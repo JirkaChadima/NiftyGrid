@@ -357,7 +357,7 @@ class Column extends \Nette\Application\UI\PresenterComponent {
 	 * @return Column
 	 */
 	public function setDateFilter() {
-		$this->parent['gridForm'][$this->parent->name]['filter']->addText($this->name, $this->label . ":")->getControlPrototype()->class("grid-datepicker");
+		$this->parent['gridForm'][$this->parent->name]['filter']->addText($this->name, $this->label . ":")->getControlPrototype()->class("grid-datepicker")->addAttributes(array('data-date-allowemptyvalue' => true));
 		$this->filterType = FilterCondition::DATE;
 
 		return $this;

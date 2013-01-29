@@ -80,7 +80,10 @@
 					{$control['gridForm'][$control->name]['filter'][$column->name]->getControl()}
 				{/if}
 			</th>
-			<th class="grid-filter-form">{$control['gridForm'][$control->name]['filter']['send']->getControl()}<a n:if="$control->hasActiveFilter()" n:href="this, filter => NULL, paginator-page => NULL" title="{_"Cancel filter"}" class="grid-filter-reset grid-ajax btn btn-primary btn-small"></a></th>
+			<th class="grid-filter-form">
+				{$control['gridForm'][$control->name]['filter']['send']->getControl()}
+				<a n:if="$control->hasActiveFilter()" n:href="this, filter => NULL, paginator-page => NULL" title="{_"Cancel filter"}" class="grid-filter-reset grid-ajax btn btn-primary btn-small"></a>
+			</th>
 		</tr>
 	</thead>
 	<tbody>
@@ -94,7 +97,7 @@
 			</td>
 			<td class="grid-row-cell grid-edited-cell">
 				{$control['gridForm'][$control->name]['rowForm']['send']->getControl()}
-				<a class="grid-rowForm-cancel grid-ajax" n:href="this" title="{_"Cancel editing"}"></a>
+				<a class="grid-rowForm-cancel grid-ajax btn btn-primary btn-small" n:href="this" title="{_"Cancel editing"}"></a>
 			</td>
 		</tr>
 		{if count($rows)}
@@ -114,7 +117,7 @@
 			<td n:if="$control->hasButtons() || $control->hasFilterForm()" n:attr="class => array(grid-row-cell, $control->isEditable() && $control->activeRowForm == $row[$primaryKey] ? 'grid-edited-cell')">
 				{if $control->activeRowForm == $row[$primaryKey] && $control->isEditable()}
 					{$control['gridForm'][$control->name]['rowForm']['send']->getControl()}
-					<a class="grid-rowForm-cancel grid-ajax" n:href="this" title="{_"Cancel editing"}"></a>
+					<a class="grid-rowForm-cancel grid-ajax btn btn-primary btn-small" n:href="this" title="{_"Cancel editing"}"></a>
 					{$control['gridForm'][$control->name]['rowForm'][$primaryKey]->getControl()}
 				{else}
 					{foreach $buttons as $button}

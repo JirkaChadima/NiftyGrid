@@ -4,6 +4,7 @@ namespace NiftyGrid\DataSource;
 
 use Nette,
 	DibiFluent;
+use NiftyGrid\FilterCondition;
 
 
 
