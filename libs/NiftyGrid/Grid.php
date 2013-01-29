@@ -1,4 +1,5 @@
 <?php
+
 /**
  * NiftyGrid - DataGrid for Nette
  *
@@ -7,12 +8,15 @@
  * @license     New BSD Licence
  * @link        http://addons.nette.org/cs/niftygrid
  */
+
 namespace NiftyGrid;
 
-abstract class Grid extends \Nette\Application\UI\Control
-{
-	const ROW_FORM = "rowForm";
+use Nette,
+	Nette\Application\UI\Presenter;
 
+abstract class Grid extends \Nette\Application\UI\Control {
+
+	const ROW_FORM = "rowForm";
 	const ADD_ROW = "addRow";
 
 	/** @persistent array */
@@ -39,7 +43,7 @@ abstract class Grid extends \Nette\Application\UI\Control
 	/** @var string */
 	protected $defaultOrder;
 
-	/** @var IDataSource */
+	/** @var DataSource\IDataSource */
 	protected $dataSource;
 
 	/** @var string */
@@ -77,95 +81,97 @@ abstract class Grid extends \Nette\Application\UI\Control
 
 	/** @var string */
 	public $messageNoRecords = 'No records';
-	
+
 	/** @var \Nette\Localization\ITranslator */
 	protected $translator = null;
 
-	/**
-	 * @param \Nette\Application\UI\Presenter $presenter
-	 */
-	protected function attached($presenter)
-	{
-		parent::attached($presenter);
+	function __construct() {
+		parent::__construct();
 
 		$this->addComponent(New \Nette\ComponentModel\Container(), "columns");
 		$this->addComponent(New \Nette\ComponentModel\Container(), "buttons");
 		$this->addComponent(New \Nette\ComponentModel\Container(), "globalButtons");
 		$this->addComponent(New \Nette\ComponentModel\Container(), "actions");
 		$this->addComponent(New \Nette\ComponentModel\Container(), "subGrids");
+	}
 
-		if($presenter->isAjax()){
+	/**
+	 * @param \Nette\Application\UI\Presenter $presenter
+	 */
+	protected function attached($presenter) {
+		parent::attached($presenter);
+		if (!$presenter instanceof Presenter)
+			return;
+
+		if ($presenter->isAjax()) {
 			$this->invalidateControl();
 		}
 
 		$this->configure($presenter);
 
-		if($this->isSubGrid && !empty($this->afterConfigureSettings)){
+		if ($this->isSubGrid && !empty($this->afterConfigureSettings)) {
 			call_user_func($this->afterConfigureSettings, $this);
 		}
 
-		if($this->hasActiveSubGrid()){
-			$subGrid = $this->addComponent($this['subGrids']->components[$this->activeSubGridName]->getGrid(), "subGrid".$this->activeSubGridName);
-			$subGrid->registerSubGrid("subGrid".$this->activeSubGridName);
+		if ($this->hasActiveSubGrid()) {
+			$subGrid = $this->addComponent($this['subGrids']->components[$this->activeSubGridName]->getGrid(), "subGrid" . $this->activeSubGridName);
+			$subGrid->registerSubGrid("subGrid" . $this->activeSubGridName);
 		}
 
-		if($this->hasActionForm()){
+		if ($this->hasActionForm()) {
 			$actions = array();
-			foreach($this['actions']->components as $name => $action){
+			foreach ($this['actions']->components as $name => $action) {
 				$actions[$name] = $action->getAction();
 			}
 			$this['gridForm'][$this->name]['action']['action_name']->setItems($actions);
 		}
-		if($this->paginate){
-			if($this->hasActiveItemPerPage()){
-				if(in_array($this->perPage, $this['gridForm'][$this->name]['perPage']['perPage']->items)){
+		if ($this->paginate) {
+			if ($this->hasActiveItemPerPage()) {
+				if (in_array($this->perPage, $this['gridForm'][$this->name]['perPage']['perPage']->items)) {
 					$this['gridForm'][$this->name]['perPage']->setDefaults(array("perPage" => $this->perPage));
-				}else{
+				} else {
 					$items = $this['gridForm'][$this->name]['perPage']['perPage']->getItems();
 					$this->perPage = reset($items);
 				}
-			}else{
+			} else {
 				$items = $this['gridForm'][$this->name]['perPage']['perPage']->getItems();
 				$this->perPage = reset($items);
 			}
 			$this->getPaginator()->itemsPerPage = $this->perPage;
 		}
-		if($this->hasActiveFilter()){
+		if ($this->hasActiveFilter()) {
 			$this->filterData();
 			$this['gridForm'][$this->name]['filter']->setDefaults($this->filter);
 		}
-		if($this->hasActiveOrder() && $this->hasEnabledSorting()){
+		if ($this->hasActiveOrder() && $this->hasEnabledSorting()) {
 			$this->orderData($this->order);
 		}
-		if(!$this->hasActiveOrder() && $this->hasDefaultOrder() && $this->hasEnabledSorting()){
+		if (!$this->hasActiveOrder() && $this->hasDefaultOrder() && $this->hasEnabledSorting()) {
 			$order = explode(" ", $this->defaultOrder);
 			$this->dataSource->orderData($order[0], $order[1]);
 		}
-		$this->count = $this->getCount();
 	}
-	
+
 	abstract protected function configure($presenter);
 
 	/**
 	 * @param string $subGrid
 	 */
-	public function registerSubGrid($subGrid)
-	{
-		if(!$this->isSubGrid){
+	public function registerSubGrid($subGrid) {
+		if (!$this->isSubGrid) {
 			$this->subGrids[] = $subGrid;
-		}else{
-			$this->parent->registerSubGrid($this->name."-".$subGrid);
+		} else {
+			$this->parent->registerSubGrid($this->name . "-" . $subGrid);
 		}
 	}
 
 	/**
 	 * @return array
 	 */
-	public function getSubGrids()
-	{
-		if($this->isSubGrid){
+	public function getSubGrids() {
+		if ($this->isSubGrid) {
 			return $this->parent->getSubGrids();
-		}else{
+		} else {
 			return $this->subGrids;
 		}
 	}
@@ -174,25 +180,23 @@ abstract class Grid extends \Nette\Application\UI\Control
 	 * @param null|string $gridName
 	 * @return string
 	 */
-	public function getGridPath($gridName = NULL)
-	{
-		if(empty($gridName)){
+	public function getGridPath($gridName = NULL) {
+		if (empty($gridName)) {
 			$gridName = $this->name;
-		}else{
-			$gridName = $this->name."-".$gridName;
+		} else {
+			$gridName = $this->name . "-" . $gridName;
 		}
-		if($this->isSubGrid){
+		if ($this->isSubGrid) {
 			return $this->parent->getGridPath($gridName);
-		}else{
+		} else {
 			return $gridName;
 		}
 	}
 
-	public function findSubGridPath($gridName)
-	{
-		foreach($this->subGrids as $subGrid){
+	public function findSubGridPath($gridName) {
+		foreach ($this->subGrids as $subGrid) {
 			$path = explode("-", $subGrid);
-			if(end($path) == $gridName){
+			if (end($path) == $gridName) {
 				return $subGrid;
 			}
 		}
@@ -203,9 +207,8 @@ abstract class Grid extends \Nette\Application\UI\Control
 	 * @return \Nette\Forms\IControl
 	 * @throws UnknownColumnException
 	 */
-	public function getColumnInput($columnName)
-	{
-		if(!$this->columnExists($columnName)){
+	public function getColumnInput($columnName) {
+		if (!$this->columnExists($columnName)) {
 			throw new UnknownColumnException("Column $columnName doesn't exists.");
 		}
 		return $this['gridForm'][$this->name]['rowForm'][$columnName];
@@ -216,21 +219,19 @@ abstract class Grid extends \Nette\Application\UI\Control
 	 * @param null|string $label
 	 * @param null|string $width
 	 * @param null|int $truncate
-	 * @return Column
+	 * @return Components\Column
 	 * @throws DuplicateColumnException
-	 * @return \Nifty\Grid\Column
 	 */
-	protected function addColumn($name, $label = NULL, $width = NULL, $truncate = NULL)
-	{
-		if(!empty($this['columns']->components[$name])){
+	public function addColumn($name, $label = NULL, $width = NULL, $truncate = NULL) {
+		if (!empty($this['columns']->components[$name])) {
 			throw new DuplicateColumnException("Column $name already exists.");
 		}
-		$column = new Column($this['columns'], $name);
+		$column = new Components\Column($this['columns'], $name);
 		$column->setName($name)
-			->setLabel($label)
-			->setWidth($width)
-			->setTruncate($truncate)
-			->injectParent($this);
+				->setLabel($label)
+				->setWidth($width)
+				->setTruncate($truncate)
+				->injectParent($this);
 
 		return $column;
 	}
@@ -238,40 +239,42 @@ abstract class Grid extends \Nette\Application\UI\Control
 	/**
 	 * @param string $name
 	 * @param null|string $label
-	 * @return Button
+	 * @return Components\Button
 	 * @throws DuplicateButtonException
 	 */
-	protected function addButton($name, $label = NULL)
-	{
-		if(!empty($this['buttons']->components[$name])){
+	public function addButton($name, $label = NULL) {
+		if (!empty($this['buttons']->components[$name])) {
 			throw new DuplicateButtonException("Button $name already exists.");
 		}
-		$button = new Button($this['buttons'], $name);
-		if($name == self::ROW_FORM){
+		$button = new Components\Button($this['buttons'], $name);
+		if ($name == self::ROW_FORM) {
 			$self = $this;
 			$primaryKey = $this->primaryKey;
-			$button->setLink(function($row) use($self, $primaryKey){
-				return $self->link("showRowForm!", $row[$primaryKey]);
-			});
+			$button->setLink(function($row) use($self, $primaryKey) {
+						return $self->link("showRowForm!", $row[$primaryKey]);
+					});
+		} else {
+			if (!empty($this['buttons']->components[$name])) {
+				throw new DuplicateButtonException("Button $name already exists.");
+			}
+			$button = new Components\Button($this['buttons'], $name);
 		}
 		$button->setLabel($label);
 		return $button;
 	}
 
-
 	/**
 	 * @param string $name
 	 * @param null|string $label
 	 * @throws DuplicateGlobalButtonException
-	 * @return GlobalButton
+	 * @return Components\GlobalButton
 	 */
-	public function addGlobalButton($name, $label = NULL)
-	{
-		if(!empty($this['globalButtons']->components[$name])){
+	public function addGlobalButton($name, $label = NULL) {
+		if (!empty($this['globalButtons']->components[$name])) {
 			throw new DuplicateGlobalButtonException("Global button $name already exists.");
 		}
-		$globalButton = new GlobalButton($this['globalButtons'], $name);
-		if($name == self::ADD_ROW){
+		$globalButton = new Components\GlobalButton($this['globalButtons'], $name);
+		if ($name == self::ADD_ROW) {
 			$globalButton->setLink($this->link("addRow!"));
 		}
 		$globalButton->setLabel($label);
@@ -281,17 +284,16 @@ abstract class Grid extends \Nette\Application\UI\Control
 	/**
 	 * @param string $name
 	 * @param null|string $label
-	 * @return Action
+	 * @return Components\Action
 	 * @throws DuplicateActionException
 	 */
-	public function addAction($name, $label = NULL)
-	{
-		if(!empty($this['actions']->components[$name])){
+	public function addAction($name, $label = NULL) {
+		if (!empty($this['actions']->components[$name])) {
 			throw new DuplicateActionException("Action $name already exists.");
 		}
-		$action = new Action($this['actions'], $name);
+		$action = new Components\Action($this['actions'], $name);
 		$action->setName($name)
-			->setLabel($label);
+				->setLabel($label);
 
 		return $action;
 	}
@@ -299,34 +301,32 @@ abstract class Grid extends \Nette\Application\UI\Control
 	/**
 	 * @param string $name
 	 * @param null|string $label
-	 * @return SubGrid
+	 * @return Components\SubGrid
 	 * @throws DuplicateSubGridException
 	 */
-	public function addSubGrid($name, $label = NULL)
-	{
-		if(!empty($this['subGrids']->components[$name]) || in_array($name, $this->getSubGrids())){
+	public function addSubGrid($name, $label = NULL) {
+		if (!empty($this['subGrids']->components[$name]) || in_array($name, $this->getSubGrids())) {
 			throw new DuplicateSubGridException("SubGrid $name already exists.");
 		}
 		$self = $this;
 		$primaryKey = $this->primaryKey;
-		$subGrid = new SubGrid($this['subGrids'], $name);
+		$subGrid = new Components\SubGrid($this['subGrids'], $name);
 		$subGrid->setName($name)
-			->setLabel($label);
-		if($this->activeSubGridName == $name){
+				->setLabel($label);
+		if ($this->activeSubGridName == $name) {
 			$subGrid->setClass("grid-subgrid-close");
-			$subGrid->setClass(function($row) use ($self, $primaryKey){
-				return $row[$primaryKey] == $self->activeSubGridId ? "grid-subgrid-close" : "grid-subgrid-open";
-			});
-			$subGrid->setLink(function($row) use ($self, $name, $primaryKey){
-				$link = $row[$primaryKey] == $self->activeSubGridId ? array("activeSubGridId" => NULL, "activeSubGridName" => NULL) : array("activeSubGridId" => $row[$primaryKey], "activeSubGridName" => $name);
-				return $self->link("this", $link);
-			});
-		}
-		else{
+			$subGrid->setClass(function($row) use ($self, $primaryKey) {
+						return $row[$primaryKey] == $self->activeSubGridId ? "grid-subgrid-close" : "grid-subgrid-open";
+					});
+			$subGrid->setLink(function($row) use ($self, $name, $primaryKey) {
+						$link = $row[$primaryKey] == $self->activeSubGridId ? array("activeSubGridId" => NULL, "activeSubGridName" => NULL) : array("activeSubGridId" => $row[$primaryKey], "activeSubGridName" => $name);
+						return $self->link("this", $link);
+					});
+		} else {
 			$subGrid->setClass("grid-subgrid-open")
-			->setLink(function($row) use ($self, $name, $primaryKey){
-				return $self->link("this", array("activeSubGridId" => $row[$primaryKey], "activeSubGridName" => $name));
-			});
+					->setLink(function($row) use ($self, $name, $primaryKey) {
+								return $self->link("this", array("activeSubGridId" => $row[$primaryKey], "activeSubGridName" => $name));
+							});
 		}
 		return $subGrid;
 	}
@@ -334,9 +334,9 @@ abstract class Grid extends \Nette\Application\UI\Control
 	/**
 	 * @return array
 	 */
-	public function getColumnNames()
-	{
-		foreach($this['columns']->components as $column){
+	public function getColumnNames() {
+		$columns = array();
+		foreach ($this['columns']->components as $column) {
 			$columns[] = $column->name;
 		}
 		return $columns;
@@ -345,21 +345,23 @@ abstract class Grid extends \Nette\Application\UI\Control
 	/**
 	 * @return int $count
 	 */
-	public function getColsCount()
-	{
+	public function getColsCount() {
 		$count = count($this['columns']->components);
-		$this->hasActionForm() ? $count++ : $count;
-		($this->hasButtons() || $this->hasFilterForm()) ? $count++ : $count;
+		if ($this->hasActionForm()) {
+			$count++;
+		}
+		if ($this->hasButtons() || $this->hasFilterForm()) {
+			$count++;
+		}
 		$count += count($this['subGrids']->components);
 
 		return $count;
 	}
 
 	/**
-	 * @param IDataSource $dataSource
+	 * @param DataSource\IDataSource $dataSource
 	 */
-	protected function setDataSource(IDataSource $dataSource)
-	{
+	protected function setDataSource(DataSource\IDataSource $dataSource) {
 		$this->dataSource = $dataSource;
 		$this->primaryKey = $this->dataSource->getPrimaryKey();
 	}
@@ -367,24 +369,21 @@ abstract class Grid extends \Nette\Application\UI\Control
 	/**
 	 * @param string $width
 	 */
-	public function setWidth($width)
-	{
+	public function setWidth($width) {
 		$this->width = $width;
 	}
 
 	/**
 	 * @param string $messageNoRecords
 	 */
-	public function setMessageNoRecords($messageNoRecords)
-	{
+	public function setMessageNoRecords($messageNoRecords) {
 		$this->messageNoRecords = $messageNoRecords;
 	}
 
 	/**
 	 * @param string $order
 	 */
-	public function setDefaultOrder($order)
-	{
+	public function setDefaultOrder($order) {
 		$this->defaultOrder = $order;
 	}
 
@@ -392,15 +391,14 @@ abstract class Grid extends \Nette\Application\UI\Control
 	 * @param array $values
 	 * @return array
 	 */
-	protected function setPerPageValues(array $values)
-	{
+	protected function setPerPageValues(array $values) {
 		$perPageValues = array();
-		foreach($values as $value){
+		foreach ($values as $value) {
 			$perPageValues[$value] = $value;
 		}
 		$this->perPageValues = $perPageValues;
 	}
-	
+
 	public function setTranslator(\Nette\Localization\ITranslator $translator) {
 		$this->translator = $translator;
 	}
@@ -408,26 +406,23 @@ abstract class Grid extends \Nette\Application\UI\Control
 	/**
 	 * @return bool
 	 */
-	public function hasButtons()
-	{
+	public function hasButtons() {
 		return count($this['buttons']->components) ? TRUE : FALSE;
 	}
 
 	/**
 	 * @return bool
 	 */
-	public function hasGlobalButtons()
-	{
+	public function hasGlobalButtons() {
 		return count($this['globalButtons']->components) ? TRUE : FALSE;
 	}
 
 	/**
 	 * @return bool
 	 */
-	public function hasFilterForm()
-	{
-		foreach($this['columns']->components as $column){
-			if(!empty($column->filterType))
+	public function hasFilterForm() {
+		foreach ($this['columns']->components as $column) {
+			if (!empty($column->filterType))
 				return TRUE;
 		}
 		return FALSE;
@@ -436,16 +431,14 @@ abstract class Grid extends \Nette\Application\UI\Control
 	/**
 	 * @return bool
 	 */
-	public function hasActionForm()
-	{
+	public function hasActionForm() {
 		return count($this['actions']->components) ? TRUE : FALSE;
 	}
 
 	/**
 	 * @return bool
 	 */
-	public function hasActiveFilter()
-	{
+	public function hasActiveFilter() {
 		return count($this->filter) ? TRUE : FALSE;
 	}
 
@@ -453,9 +446,8 @@ abstract class Grid extends \Nette\Application\UI\Control
 	 * @param string $filter
 	 * @return bool
 	 */
-	public function isSpecificFilterActive($filter)
-	{
-		if(isset($this->filter[$filter])){
+	public function isSpecificFilterActive($filter) {
+		if (isset($this->filter[$filter])) {
 			return ($this->filter[$filter] != '') ? TRUE : FALSE;
 		}
 		return false;
@@ -464,37 +456,32 @@ abstract class Grid extends \Nette\Application\UI\Control
 	/**
 	 * @return bool
 	 */
-	public function hasActiveOrder()
-	{
-		return !empty($this->order) ? TRUE: FALSE;
+	public function hasActiveOrder() {
+		return !empty($this->order) ? TRUE : FALSE;
 	}
 
 	/**
 	 * @return bool
 	 */
-	public function hasDefaultOrder()
-	{
+	public function hasDefaultOrder() {
 		return !empty($this->defaultOrder) ? TRUE : FALSE;
 	}
 
 	/**
 	 * @return bool
 	 */
-	public function hasEnabledSorting()
-	{
+	public function hasEnabledSorting() {
 		return $this->enableSorting;
 	}
 
 	/**
 	 * @return bool
 	 */
-	public function hasActiveItemPerPage()
-	{
+	public function hasActiveItemPerPage() {
 		return !empty($this->perPage) ? TRUE : FALSE;
 	}
 
-	public function hasActiveRowForm()
-	{
+	public function hasActiveRowForm() {
 		return !empty($this->activeRowForm) ? TRUE : FALSE;
 	}
 
@@ -502,8 +489,7 @@ abstract class Grid extends \Nette\Application\UI\Control
 	 * @param string $column
 	 * @return bool
 	 */
-	public function columnExists($column)
-	{
+	public function columnExists($column) {
 		return isset($this['columns']->components[$column]);
 	}
 
@@ -511,18 +497,16 @@ abstract class Grid extends \Nette\Application\UI\Control
 	 * @param string $subGrid
 	 * @return bool
 	 */
-	public function subGridExists($subGrid)
-	{
+	public function subGridExists($subGrid) {
 		return isset($this['subGrids']->components[$subGrid]);
 	}
 
 	/**
 	 * @return bool
 	 */
-	public function isEditable()
-	{
-		foreach($this['columns']->components as $component){
-			if($component->editable)
+	public function isEditable() {
+		foreach ($this['columns']->components as $component) {
+			if ($component->editable)
 				return TRUE;
 		}
 		return FALSE;
@@ -531,8 +515,19 @@ abstract class Grid extends \Nette\Application\UI\Control
 	/**
 	 * @return bool
 	 */
-	public function hasActiveSubGrid()
-	{
+	public function isCurrentLinkShown() {
+		return $this->showCurrentLink;
+	}
+
+	public function showCurrentLink($show = TRUE) {
+		$this->showCurrentLink = $show;
+		return $this;
+	}
+
+	/**
+	 * @return bool
+	 */
+	public function hasActiveSubGrid() {
 		return (!empty($this->activeSubGridId) && !empty($this->activeSubGridName) && $this->subGridExists($this->activeSubGridName)) ? TRUE : FALSE;
 	}
 
@@ -542,44 +537,40 @@ abstract class Grid extends \Nette\Application\UI\Control
 	 * @throws UnknownColumnException
 	 * @throws UnknownFilterException
 	 */
-	protected function filterData()
-	{
-		try{
+	protected function filterData() {
+		try {
 			$filters = array();
-			foreach($this->filter as $name => $value){
-				if(!$this->columnExists($name)){
+			foreach ($this->filter as $name => $value) {
+				if (!$this->columnExists($name)) {
 					throw new UnknownColumnException("Unknown column $name");
-
 				}
-				if(!$this['columns-'.$name]->hasFilter()){
+				if (!$this['columns-' . $name]->hasFilter()) {
 					throw new UnknownFilterException("Unknown filter for column $name");
 				}
 
-				$type = $this['columns-'.$name]->getFilterType();
+				$type = $this['columns-' . $name]->getFilterType();
 				$filter = FilterCondition::prepareFilter($value, $type);
 
-				if(method_exists("\\NiftyGrid\\FilterCondition", $filter["condition"])){
-					$filter = call_user_func("\\NiftyGrid\\FilterCondition::".$filter["condition"], $filter["value"]);
-					if(!empty($this['gridForm'][$this->name]['filter'][$name])){
+				if (method_exists("\\NiftyGrid\\FilterCondition", $filter["condition"])) {
+					$filter = call_user_func("\\NiftyGrid\\FilterCondition::" . $filter["condition"], $filter["value"]);
+					if (!empty($this['gridForm'][$this->name]['filter'][$name])) {
 						$filter["column"] = $name;
-						if(!empty($this['columns-'.$filter["column"]]->tableName)){
-							$filter["column"] = $this['columns-'.$filter["column"]]->tableName;
+						if (!empty($this['columns-' . $filter["column"]]->tableName)) {
+							$filter["column"] = $this['columns-' . $filter["column"]]->tableName;
 						}
 						$filters[] = $filter;
-					}else{
+					} else {
 						throw new InvalidFilterException("Invalid filter");
 					}
-				}else{
+				} else {
 					throw new InvalidFilterException("Invalid filter");
 				}
 			}
 			return $this->dataSource->filterData($filters);
-		}
-		catch(UnknownColumnException $e){
+		} catch (UnknownColumnException $e) {
 			$this->flashMessage($e->getMessage(), "grid-error");
 			$this->redirect("this", array("filter" => NULL));
-		}
-		catch(UnknownFilterException $e){
+		} catch (UnknownFilterException $e) {
 			$this->flashMessage($e->getMessage(), "grid-error");
 			$this->redirect("this", array("filter" => NULL));
 		}
@@ -589,20 +580,18 @@ abstract class Grid extends \Nette\Application\UI\Control
 	 * @param string $order
 	 * @throws InvalidOrderException
 	 */
-	protected function orderData($order)
-	{
-		try{
+	protected function orderData($order) {
+		try {
 			$order = explode(" ", $order);
-			if(in_array($order[0], $this->getColumnNames()) && in_array($order[1], array("ASC", "DESC")) && $this['columns-'.$order[0]]->isSortable()){
-				if(!empty($this['columns-'.$order[0]]->tableName)){
-					$order[0] = $this['columns-'.$order[0]]->tableName;
+			if (in_array($order[0], $this->getColumnNames()) && in_array($order[1], array("ASC", "DESC")) && $this['columns-' . $order[0]]->isSortable()) {
+				if (!empty($this['columns-' . $order[0]]->tableName)) {
+					$order[0] = $this['columns-' . $order[0]]->tableName;
 				}
 				$this->dataSource->orderData($order[0], $order[1]);
-			}else{
+			} else {
 				throw new InvalidOrderException("Invalid order.");
 			}
-		}
-		catch(InvalidOrderException $e){
+		} catch (InvalidOrderException $e) {
 			$this->flashMessage($e->getMessage(), "grid-error");
 			$this->redirect("this", array("order" => NULL));
 		}
@@ -611,14 +600,22 @@ abstract class Grid extends \Nette\Application\UI\Control
 	/**
 	 * @return int
 	 */
-	protected function getCount()
-	{
-		if($this->paginate && is_numeric($this->perPage)){
-			$count = $this->dataSource->getCount();
-			$this->getPaginator()->itemCount = $count;
-			$this->dataSource->limitData($this->getPaginator()->itemsPerPage, $this->getPaginator()->offset);
-			return $count;
-		}else{
+	protected function getCount() {
+		if (!$this->dataSource)
+			throw new GridException("DataSource not yet set");
+		if ($this->paginate && is_numeric($this->perPage)) {
+			if ($this->hasActiveFilter()) {
+				$count = $this->dataSource->getSelectedRowsCount();
+				$this->getPaginator()->itemCount = $count;
+				$this->dataSource->limitData($this->getPaginator()->itemsPerPage, $this->getPaginator()->offset);
+				return $count;
+			} else {
+				$count = $this->dataSource->getCount();
+				$this->getPaginator()->itemCount = $count;
+				$this->dataSource->limitData($this->getPaginator()->itemsPerPage, $this->getPaginator()->offset);
+				return $count;
+			}
+		} else {
 			$count = $this->dataSource->getCount();
 			$this->getPaginator()->itemCount = $count;
 			return $count;
@@ -628,25 +625,22 @@ abstract class Grid extends \Nette\Application\UI\Control
 	/**
 	 * @return GridPaginator
 	 */
-	protected function createComponentPaginator()
-	{
-		return  new GridPaginator;
+	protected function createComponentPaginator() {
+		return new GridPaginator;
 	}
 
 	/**
 	 * @return \Nette\Utils\Paginator
 	 */
-	public function getPaginator()
-	{
+	public function getPaginator() {
 		return $this['paginator']->paginator;
 	}
 
 	/**
 	 * @param int $page
 	 */
-	public function handleChangeCurrentPage($page)
-	{
-		if($this->presenter->isAjax()){
+	public function handleChangeCurrentPage($page) {
+		if ($this->presenter->isAjax()) {
 			$this->redirect("this", array("paginator-page" => $page));
 		}
 	}
@@ -654,9 +648,8 @@ abstract class Grid extends \Nette\Application\UI\Control
 	/**
 	 * @param int $perPage
 	 */
-	public function handleChangePerPage($perPage)
-	{
-		if($this->presenter->isAjax()){
+	public function handleChangePerPage($perPage) {
+		if ($this->presenter->isAjax()) {
 			$this->redirect("this", array("perPage" => $perPage));
 		}
 	}
@@ -665,18 +658,17 @@ abstract class Grid extends \Nette\Application\UI\Control
 	 * @param string $column
 	 * @param string $term
 	 */
-	public function handleAutocomplete($column, $term)
-	{
-		if($this->presenter->isAjax()){
-			if(!empty($this['columns']->components[$column]) && $this['columns']->components[$column]->autocomplete){
-				$this->filter[$column] = $term."%";
+	public function handleAutocomplete($column, $term) {
+		if ($this->presenter->isAjax()) {
+			if (!empty($this['columns']->components[$column]) && $this['columns']->components[$column]->autocomplete) {
+				$this->filter[$column] = $term . "%";
 				$this->filterData();
 				$this->dataSource->limitData($this['columns']->components[$column]->getAutocompleteResults(), NULL);
 				$data = $this->dataSource->getData();
 				$results = array();
-				foreach($data as $row){
+				foreach ($data as $row) {
 					$value = $row[$column];
-					if(!in_array($value, $results)){
+					if (!in_array($value, $results)) {
 						$results[] = $row[$column];
 					}
 				}
@@ -686,24 +678,21 @@ abstract class Grid extends \Nette\Application\UI\Control
 		}
 	}
 
-	public function handleAddRow()
-	{
+	public function handleAddRow() {
 		$this->showAddRow = TRUE;
 	}
 
 	/**
 	 * @param int $id
 	 */
-	public function handleShowRowForm($id)
-	{
+	public function handleShowRowForm($id) {
 		$this->activeRowForm = $id;
 	}
 
 	/**
 	 * @param $callback
 	 */
-	public function setRowFormCallback($callback)
-	{
+	public function setRowFormCallback($callback) {
 		$this->rowFormCallback = $callback;
 	}
 
@@ -711,19 +700,17 @@ abstract class Grid extends \Nette\Application\UI\Control
 	 * @param int $id
 	 * @return \Nette\Forms\Controls\Checkbox
 	 */
-	public function assignCheckboxToRow($id)
-	{
-		$this['gridForm'][$this->name]['action']->addCheckbox("row_".$id);
-		$this['gridForm'][$this->name]['action']["row_".$id]->getControlPrototype()->class[] = "grid-action-checkbox";
-		return $this['gridForm'][$this->name]['action']["row_".$id]->getControl();
+	public function assignCheckboxToRow($id) {
+		$this['gridForm'][$this->name]['action']->addCheckbox("row_" . $id);
+		$this['gridForm'][$this->name]['action']["row_" . $id]->getControlPrototype()->class[] = "grid-action-checkbox";
+		return $this['gridForm'][$this->name]['action']["row_" . $id]->getControl();
 	}
 
-	protected function createComponentGridForm()
-	{
+	protected function createComponentGridForm() {
 		$form = new \Nette\Application\UI\Form;
 		$form->method = "POST";
 		$form->getElementPrototype()->class[] = "grid-gridForm";
-		
+
 		if ($this->translator) {
 			$form->setTranslator($this->translator);
 		}
@@ -731,31 +718,31 @@ abstract class Grid extends \Nette\Application\UI\Control
 		$form->addContainer($this->name);
 
 		$form[$this->name]->addContainer("rowForm");
-		$form[$this->name]['rowForm']->addSubmit("send",_("Save"));
+		$form[$this->name]['rowForm']->addSubmit("send", _("Save"));
 		$form[$this->name]['rowForm']['send']->getControlPrototype()->addClass("grid-editable");
 
 		$form[$this->name]->addContainer("filter");
-		$form[$this->name]['filter']->addSubmit("send",_("Filter"))
-			->setAttribute('class', 'btn btn-primary btn-small')
-			->setValidationScope(FALSE);
+		$form[$this->name]['filter']->addSubmit("send", _("Filter"))
+				->setAttribute('class', 'btn btn-primary btn-small')
+				->setValidationScope(FALSE);
 
 		$form[$this->name]->addContainer("action");
-		$form[$this->name]['action']->addSelect("action_name",_("Mark:"));
-		$form[$this->name]['action']->addSubmit("send",_("Confirm"))
-			->setValidationScope(FALSE)
-			->getControlPrototype()
-			->addData("select", $form[$this->name]["action"]["action_name"]->getControl()->name);
+		$form[$this->name]['action']->addSelect("action_name", _("Mark:"));
+		$form[$this->name]['action']->addSubmit("send", _("Confirm"))
+				->setValidationScope(FALSE)
+				->getControlPrototype()
+				->addData("select", $form[$this->name]["action"]["action_name"]->getControl()->name);
 
 		$form[$this->name]->addContainer('perPage');
-		$form[$this->name]['perPage']->addSelect("perPage",_("Records per page:"), $this->perPageValues)
-			->getControlPrototype()
-			->addClass("grid-changeperpage")
-			->addData("gridname", $this->getGridPath())
-			->addData("link", $this->link("changePerPage!"));
-		$form[$this->name]['perPage']->addSubmit("send",_("Ok"))
-			->setValidationScope(FALSE)
-			->getControlPrototype()
-			->addClass("grid-perpagesubmit");
+		$form[$this->name]['perPage']->addSelect("perPage", _("Records per page:"), $this->perPageValues)
+				->getControlPrototype()
+				->addClass("grid-changeperpage")
+				->addData("gridname", $this->getGridPath())
+				->addData("link", $this->link("changePerPage!"));
+		$form[$this->name]['perPage']->addSubmit("send", _("Ok"))
+				->setValidationScope(FALSE)
+				->getControlPrototype()
+				->addClass("grid-perpagesubmit");
 
 		$form->onSuccess[] = callback($this, "processGridForm");
 
@@ -765,29 +752,28 @@ abstract class Grid extends \Nette\Application\UI\Control
 	/**
 	 * @param array $values
 	 */
-	public function processGridForm($values)
-	{
+	public function processGridForm($values) {
 		$values = $values->getHttpData();
-		foreach($values as $gridName => $grid){
-			foreach($grid as $section => $container){
-				foreach($container as $key => $value){
-					if($key == "send"){
+		foreach ($values as $gridName => $grid) {
+			foreach ($grid as $section => $container) {
+				foreach ($container as $key => $value) {
+					if ($key == "send") {
 						unset($container[$key]);
 						$subGrids = $this->subGrids;
-						foreach($subGrids as $subGrid){
+						foreach ($subGrids as $subGrid) {
 							$path = explode("-", $subGrid);
-							if(end($path) == $gridName){
+							if (end($path) == $gridName) {
 								$gridName = $subGrid;
 								break;
 							}
 						}
-						if($section == "filter"){
+						if ($section == "filter") {
 							$this->filterFormSubmitted($values);
 						}
 						$section = ($section == "rowForm") ? "row" : $section;
-						if(method_exists($this, $section."FormSubmitted")){
-							call_user_func("self::".$section."FormSubmitted", $container, $gridName);
-						}else{
+						if (method_exists($this, $section . "FormSubmitted")) {
+							call_user_func("self::" . $section . "FormSubmitted", $container, $gridName);
+						} else {
 							$this->redirect("this");
 						}
 						break 3;
@@ -801,12 +787,11 @@ abstract class Grid extends \Nette\Application\UI\Control
 	 * @param array $values
 	 * @param string $gridName
 	 */
-	public function rowFormSubmitted($values, $gridName)
-	{
+	public function rowFormSubmitted($values, $gridName) {
 		$subGrid = ($gridName == $this->name) ? FALSE : TRUE;
-		if($subGrid){
+		if ($subGrid) {
 			call_user_func($this[$gridName]->rowFormCallback, (array) $values);
-		}else{
+		} else {
 			call_user_func($this->rowFormCallback, (array) $values);
 		}
 		$this->redirect("this");
@@ -816,9 +801,8 @@ abstract class Grid extends \Nette\Application\UI\Control
 	 * @param array $values
 	 * @param string $gridName
 	 */
-	public function perPageFormSubmitted($values, $gridName)
-	{
-		$perPage = ($gridName == $this->name) ? "perPage" : $gridName."-perPage";
+	public function perPageFormSubmitted($values, $gridName) {
+		$perPage = ($gridName == $this->name) ? "perPage" : $gridName . "-perPage";
 
 		$this->redirect("this", array($perPage => $values["perPage"]));
 	}
@@ -828,34 +812,32 @@ abstract class Grid extends \Nette\Application\UI\Control
 	 * @param string $gridName
 	 * @throws NoRowSelectedException
 	 */
-	public function actionFormSubmitted($values, $gridName)
-	{
-		try{
+	public function actionFormSubmitted($values, $gridName) {
+		try {
 			$rows = array();
-			foreach($values as $name => $value){
-				if(\Nette\Utils\Strings::startsWith($name, "row")){
+			foreach ($values as $name => $value) {
+				if (\Nette\Utils\Strings::startsWith($name, "row")) {
 					$vals = explode("_", $name);
-					if((boolean) $value){
+					if ((boolean) $value) {
 						$rows[] = $vals[1];
 					}
 				}
 			}
 			$subGrid = ($gridName == $this->name) ? FALSE : TRUE;
-			if(!count($rows)){
+			if (!count($rows)) {
 				throw new NoRowSelectedException("Nebyl vybrán žádný záznam.");
 			}
-			if($subGrid){
+			if ($subGrid) {
 				call_user_func($this[$gridName]['actions']->components[$values['action_name']]->getCallback(), $rows);
-			}else{
+			} else {
 				call_user_func($this['actions']->components[$values['action_name']]->getCallback(), $rows);
 			}
 			$this->redirect("this");
-		}
-		catch(NoRowSelectedException $e){
-			if($subGrid){
-				$this[$gridName]->flashMessage("No record selected.","grid-error");
-			}else{
-				$this->flashMessage("No record selected.","grid-error");
+		} catch (NoRowSelectedException $e) {
+			if ($subGrid) {
+				$this[$gridName]->flashMessage("No record selected.", "grid-error");
+			} else {
+				$this->flashMessage("No record selected.", "grid-error");
 			}
 			$this->redirect("this");
 		}
@@ -864,31 +846,32 @@ abstract class Grid extends \Nette\Application\UI\Control
 	/**
 	 * @param array $values
 	 */
-	public function filterFormSubmitted($values)
-	{
+	public function filterFormSubmitted($values) {
 		$filters = array();
 		$paginators = array();
-		foreach($values as $gridName => $grid){
+		foreach ($values as $gridName => $grid) {
 			$isSubGrid = ($gridName == $this->name) ? FALSE : TRUE;
-			foreach($grid['filter'] as $name => $value){
-				if($value != ''){
-					if($name == "send"){
+			foreach ($grid['filter'] as $name => $value) {
+				if ($value != '') {
+					if ($name == "send") {
 						continue;
 					}
-					if($isSubGrid){
+					if ($isSubGrid) {
 						$gridName = $this->findSubGridPath($gridName);
-						$filters[$this->name."-".$gridName."-filter"][$name] = $value;
-					}else{
-						$filters[$this->name."-filter"][$name] = $value;
+						$filters[$this->name . "-" . $gridName . "-filter"][$name] = $value;
+					} else {
+						$filters[$this->name . "-filter"][$name] = $value;
 					}
 				}
 			}
-			if($isSubGrid){
-				$paginators[$this->name."-".$gridName."-paginator-page"] = NULL;
-				if(empty($filters[$this->name."-".$gridName."-filter"])) $filters[$this->name."-".$gridName."-filter"] = array();
-			}else{
-				$paginators[$this->name."-paginator-page"] = NULL;
-				if(empty($filters[$this->name."-filter"])) $filters[$this->name."-filter"] = array();
+			if ($isSubGrid) {
+				$paginators[$this->name . "-" . $gridName . "-paginator-page"] = NULL;
+				if (empty($filters[$this->name . "-" . $gridName . "-filter"]))
+					$filters[$this->name . "-" . $gridName . "-filter"] = array();
+			}else {
+				$paginators[$this->name . "-paginator-page"] = NULL;
+				if (empty($filters[$this->name . "-filter"]))
+					$filters[$this->name . "-filter"] = array();
 			}
 		}
 		$this->presenter->redirect("this", array_merge($filters, $paginators));
@@ -897,15 +880,12 @@ abstract class Grid extends \Nette\Application\UI\Control
 	/**
 	 * @param string $templatePath
 	 */
-	protected function setTemplate($templatePath)
-	{
+	protected function setTemplate($templatePath) {
 		$this->templatePath = $templatePath;
 	}
 
-	public function render()
-	{
-		$this->getPaginator()->itemCount = $this->count;
-		$this->template->results = $this->count;
+	public function render() {
+		$this->template->results = $this->getPaginator()->itemCount = $this->getCount();
 		$this->template->columns = $this['columns']->components;
 		$this->template->buttons = $this['buttons']->components;
 		$this->template->globalButtons = $this['globalButtons']->components;
@@ -916,17 +896,17 @@ abstract class Grid extends \Nette\Application\UI\Control
 		$this->template->rows = $rows;
 		$this->template->primaryKey = $this->primaryKey;
 		$this->template->perPage = $this->perPage;
-		if($this->hasActiveRowForm()){
+		if ($this->hasActiveRowForm()) {
 			$row = $rows[$this->activeRowForm];
-			foreach($row as $name => $value){
-				if($this->columnExists($name) && !empty($this['columns']->components[$name]->formRenderer)){
+			foreach ($row as $name => $value) {
+				if ($this->columnExists($name) && !empty($this['columns']->components[$name]->formRenderer)) {
 					$row[$name] = call_user_func($this['columns']->components[$name]->formRenderer, $row);
 				}
-				if(isset($this['gridForm'][$this->name]['rowForm'][$name])){
+				if (isset($this['gridForm'][$this->name]['rowForm'][$name])) {
 					$input = $this['gridForm'][$this->name]['rowForm'][$name];
-					if($input instanceof \Nette\Forms\Controls\SelectBox){
+					if ($input instanceof \Nette\Forms\Controls\SelectBox) {
 						$items = $this['gridForm'][$this->name]['rowForm'][$name]->getItems();
-						if(in_array($row[$name], $items)){
+						if (in_array($row[$name], $items)) {
 							$row[$name] = array_search($row[$name], $items);
 						}
 					}
@@ -935,12 +915,13 @@ abstract class Grid extends \Nette\Application\UI\Control
 			$this['gridForm'][$this->name]['rowForm']->setDefaults($row);
 			$this['gridForm'][$this->name]['rowForm']->addHidden($this->primaryKey, $this->activeRowForm);
 		}
-		if($this->paginate && is_numeric($this->perPage)){
-			$this->template->viewedFrom = ((($this->getPaginator()->getPage()-1)*$this->perPage)+1);
-			$this->template->viewedTo = ($this->getPaginator()->getLength()+(($this->getPaginator()->getPage()-1)*$this->perPage));
+		if ($this->paginate && is_numeric($this->perPage)) {
+			$this->template->viewedFrom = ((($this->getPaginator()->getPage() - 1) * $this->perPage) + 1);
+			$this->template->viewedTo = ($this->getPaginator()->getLength() + (($this->getPaginator()->getPage() - 1) * $this->perPage));
 		}
-		$templatePath = !empty($this->templatePath) ? $this->templatePath : __DIR__."/templates/grid.latte";
+		$templatePath = !empty($this->templatePath) ? $this->templatePath : __DIR__ . "/../../templates/grid.latte";
 		$this->template->setFile($templatePath);
 		$this->template->render();
 	}
+
 }

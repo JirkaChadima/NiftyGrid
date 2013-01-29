@@ -28,7 +28,7 @@
 						{/foreach}
 					</div>
 					<div class="grid-upper-info">
-						<a n:href="this" class="grid-current-link" title="{_'Get link to this page'}"></a>
+						<a n:if="$control->isCurrentLinkShown()" n:href="this" class="grid-current-link" title="{_'Get link to this page'}"></a>
 						<div class="grid-results">
 							{!_'Total <strong>%s</strong> values', array($results . '')}
 						 {if $paginate && is_numeric($perPage)}

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * NiftyGrid - DataGrid for Nette
  *
@@ -7,13 +8,14 @@
  * @license     New BSD Licence
  * @link        http://addons.nette.org/cs/niftygrid
  */
-namespace NiftyGrid;
+
+namespace NiftyGrid\Components;
 
 use Nette\Utils\Html;
 use NiftyGrid\Grid; // For constant only
 
-class Button extends \Nette\Application\UI\PresenterComponent
-{
+class Button extends \Nette\Application\UI\PresenterComponent {
+
 	/** @var callback|string */
 	private $label;
 
@@ -42,8 +44,7 @@ class Button extends \Nette\Application\UI\PresenterComponent
 	 * @param string $label
 	 * @return Button
 	 */
-	public function setLabel($label)
-	{
+	public function setLabel($label) {
 		$this->label = $label;
 
 		return $this;
@@ -53,9 +54,8 @@ class Button extends \Nette\Application\UI\PresenterComponent
 	 * @param array $row
 	 * @return string
 	 */
-	private function getLabel($row)
-	{
-		if(is_callable($this->label)){
+	private function getLabel($row) {
+		if (is_callable($this->label)) {
 			return call_user_func($this->label, $row);
 		}
 		return $this->label;
@@ -65,8 +65,7 @@ class Button extends \Nette\Application\UI\PresenterComponent
 	 * @param callback|string $link
 	 * @return Button
 	 */
-	public function setLink($link)
-	{
+	public function setLink($link) {
 		$this->link = $link;
 
 		return $this;
@@ -76,9 +75,8 @@ class Button extends \Nette\Application\UI\PresenterComponent
 	 * @param array $row
 	 * @return string
 	 */
-	private function getLink($row)
-	{
-		if(is_callable($this->link)){
+	private function getLink($row) {
+		if (is_callable($this->link)) {
 			return call_user_func($this->link, $row);
 		}
 		return $this->link;
@@ -88,8 +86,7 @@ class Button extends \Nette\Application\UI\PresenterComponent
 	 * @param $text
 	 * @return mixed
 	 */
-	public function setText($text)
-	{
+	public function setText($text) {
 		$this->text = $text;
 
 		return $this;
@@ -99,20 +96,18 @@ class Button extends \Nette\Application\UI\PresenterComponent
 	 * @param array $row
 	 * @return string
 	 */
-	private function getText($row)
-	{
-		if(is_callable($this->text)){
+	private function getText($row) {
+		if (is_callable($this->text)) {
 			return call_user_func($this->text, $row);
 		}
 		return $this->text;
 	}
 
-        /**
+	/**
 	 * @param callback|string $target
 	 * @return Button
 	 */
-	public function setTarget($target)
-	{
+	public function setTarget($target) {
 		$this->target = $target;
 
 		return $this;
@@ -122,9 +117,8 @@ class Button extends \Nette\Application\UI\PresenterComponent
 	 * @param array $row
 	 * @return callback|mixed|string
 	 */
-	private function getTarget($row)
-	{
-		if(is_callable($this->target)){
+	private function getTarget($row) {
+		if (is_callable($this->target)) {
 			return call_user_func($this->target, $row);
 		}
 		return $this->target;
@@ -134,8 +128,7 @@ class Button extends \Nette\Application\UI\PresenterComponent
 	 * @param callback|string $class
 	 * @return Button
 	 */
-	public function setClass($class)
-	{
+	public function setClass($class) {
 		$this->class = $class;
 
 		return $this;
@@ -145,9 +138,8 @@ class Button extends \Nette\Application\UI\PresenterComponent
 	 * @param array $row
 	 * @return callback|mixed|string
 	 */
-	private function getClass($row)
-	{
-		if(is_callable($this->class)){
+	private function getClass($row) {
+		if (is_callable($this->class)) {
 			return call_user_func($this->class, $row);
 		}
 		return $this->class;
@@ -157,8 +149,7 @@ class Button extends \Nette\Application\UI\PresenterComponent
 	 * @param bool $ajax
 	 * @return Button
 	 */
-	public function setAjax($ajax = TRUE)
-	{
+	public function setAjax($ajax = TRUE) {
 		$this->ajax = $ajax;
 
 		return $this;
@@ -168,8 +159,7 @@ class Button extends \Nette\Application\UI\PresenterComponent
 	 * @param callback|string $message
 	 * @return Button
 	 */
-	public function setConfirmationDialog($message)
-	{
+	public function setConfirmationDialog($message) {
 		$this->dialog = $message;
 
 		return $this;
@@ -179,9 +169,8 @@ class Button extends \Nette\Application\UI\PresenterComponent
 	 * @param array $row
 	 * @return callback|mixed|string
 	 */
-	public function getConfirmationDialog($row)
-	{
-		if(is_callable($this->dialog)){
+	public function getConfirmationDialog($row) {
+		if (is_callable($this->dialog)) {
 			return call_user_func($this->dialog, $row);
 		}
 		return $this->dialog;
@@ -190,8 +179,7 @@ class Button extends \Nette\Application\UI\PresenterComponent
 	/**
 	 * @return bool
 	 */
-	private function hasConfirmationDialog()
-	{
+	private function hasConfirmationDialog() {
 		return (!empty($this->dialog)) ? TRUE : FALSE;
 	}
 
@@ -199,8 +187,7 @@ class Button extends \Nette\Application\UI\PresenterComponent
 	 * @param callback|string $show
 	 * @return Button
 	 */
-	public function setShow($show)
-	{
+	public function setShow($show) {
 		$this->show = $show;
 
 		return $this;
@@ -210,9 +197,8 @@ class Button extends \Nette\Application\UI\PresenterComponent
 	 * @param array $row
 	 * @return callback|mixed|string
 	 */
-	public function getShow($row)
-	{
-		if(is_callable($this->show)){
+	public function getShow($row) {
+		if (is_callable($this->show)) {
 			return (boolean) call_user_func($this->show, $row);
 		}
 		return $this->show;
@@ -221,30 +207,29 @@ class Button extends \Nette\Application\UI\PresenterComponent
 	/**
 	 * @param array $row
 	 */
-	public function render($row)
-	{
-		if(!$this->getShow($row)){
+	public function render($row) {
+		if (!$this->getShow($row)) {
 			return false;
 		}
 
 		$el = Html::el("a")
-			->href($this->getLink($row))
-			->setText($this->getText($row))
-			->addClass("grid-button")
-			->addClass($this->getClass($row))
-			->setTitle($this->getLabel($row))
-			->setTarget($this->getTarget($row));
+				->href($this->getLink($row))
+				->setText($this->getText($row))
+				->addClass("grid-button")
+				->addClass($this->getClass($row))
+				->setTitle($this->getLabel($row))
+				->setTarget($this->getTarget($row));
 
-		if($this->getName() == Grid::ROW_FORM) {
+		if ($this->getName() == Grid::ROW_FORM) {
 			$el->addClass("grid-editable");
 		}
 
-		if($this->hasConfirmationDialog()){
+		if ($this->hasConfirmationDialog()) {
 			$el->addClass("grid-confirm")
-				->addData("grid-confirm", $this->getConfirmationDialog($row));
+					->addData("grid-confirm", $this->getConfirmationDialog($row));
 		}
 
-		if($this->ajax){
+		if ($this->ajax) {
 			$el->addClass("grid-ajax");
 		}
 		echo $el;

@@ -1,6 +1,6 @@
 <?php
 
-namespace NiftyGrid;
+namespace NiftyGrid\DataSource;
 
 use Nette,
 	DibiFluent;
@@ -97,6 +97,10 @@ class DibiFluentDataSource extends Nette\Object implements IDataSource
 		}
 
 		return $count;
+	}
+	
+	public function getSelectedRowsCount() {
+		return $this->getCount();
 	}
 
 

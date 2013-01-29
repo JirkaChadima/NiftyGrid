@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Doctrine DataSource for NiftyGrid - DataGrid for Nette
  *
@@ -7,21 +8,19 @@
  * @license     New BSD Licence
  * @link        http://addons.nette.org/cs/niftygrid
  */
-namespace NiftyGrid;
+
+namespace NiftyGrid\DataSource;
 
 use NiftyGrid\FilterCondition,
 	Nette\Utils\Strings;
-
 use Doctrine\ORM\Tools\Pagination\Paginator;
 
-class DoctrineDataSource implements IDataSource
-{
-	private $qb;
+class DoctrineDataSource implements IDataSource {
 
+	private $qb;
 	private $primary;
 
-	public function __construct($qb, $primary)
-	{
+	public function __construct($qb, $primary) {
 		// Query builder
 		$this->qb = $qb;
 
@@ -29,19 +28,16 @@ class DoctrineDataSource implements IDataSource
 		$this->primary = $primary;
 	}
 
-	public function getQuery()
-	{
+	public function getQuery() {
 		return $this->qb->getQuery();
 	}
 
-
-	public function getData()
-	{
+	public function getData() {
 		$result = array();
-		foreach($this->getQuery()->getScalarResult() as $values) {
+		foreach ($this->getQuery()->getScalarResult() as $values) {
 			$id = $result[$values[$this->primary]]['id'] = $values[$this->primary];
 
-			foreach($values as $column => $value) {
+			foreach ($values as $column => $value) {
 				$result[$id][$column] = $value;
 			}
 		}
@@ -49,45 +45,39 @@ class DoctrineDataSource implements IDataSource
 		return $result;
 	}
 
-	public function getPrimaryKey()
-	{
+	public function getPrimaryKey() {
 		return $this->primary;
 	}
 
-	public function getCount($column = "*")
-	{
-        return $this->getSelectedRowsCount();
+	public function getCount($column = "*") {
+		return $this->getSelectedRowsCount();
 	}
 
-	public function getSelectedRowsCount()
-	{
-        $paginator = new Paginator($this->getQuery());
+	public function getSelectedRowsCount() {
+		$paginator = new Paginator($this->getQuery());
 
-        return $paginator->count();
+		return $paginator->count();
 	}
 
-	public function orderData($by, $way)
-	{
+	public function orderData($by, $way) {
 		$this->qb->orderBy($this->columnName($by), $way);
 	}
 
-	public function limitData($limit, $offset)
-	{
+	public function limitData($limit, $offset) {
 		$this->qb->setFirstResult($offset)
-				 ->setMaxResults($limit);
+				->setMaxResults($limit);
 	}
 
-	public function filterData(array $filters)
-	{
-		foreach($filters as $filter){
-			if($filter["type"] == FilterCondition::WHERE){
+	public function filterData(array $filters) {
+		foreach ($filters as $filter) {
+			if ($filter["type"] == FilterCondition::WHERE) {
 
 				$column = $this->columnName($filter['column']);
 				$value = $filter["value"];
 				$expr = $this->qb->expr();
 				$cond = false;
 
-				switch($filter['cond']) {
+				switch ($filter['cond']) {
 					case ' LIKE ?':
 						$cond = $expr->like($column, $expr->literal($value));
 						break;
@@ -117,14 +107,16 @@ class DoctrineDataSource implements IDataSource
 						break;
 				}
 
-				if(!$cond) {
+				if (!$cond) {
 					try {
 						$datetime = new \DateTime($value);
 						$value = $datetime->format('Y-m-d H:i:s');
-					} catch(\Exception $e) {}
+					} catch (\Exception $e) {
+						
+					}
 
-					if(isset($datetime)) {
-						switch($filter['cond']) {
+					if (isset($datetime)) {
+						switch ($filter['cond']) {
 							/** Dates */
 							case ' = ':
 								$cond = $expr->like($column, $expr->literal($datetime->format('Y-m-d') . '%'));
@@ -153,19 +145,18 @@ class DoctrineDataSource implements IDataSource
 					}
 				}
 
-				if($cond) {
+				if ($cond) {
 					$this->qb->andWhere($cond);
 				}
-
 			}
 		}
 	}
 
-	private function columnName($full)
-	{
+	private function columnName($full) {
 		$name = explode("_", $full);
 		$entity = $name[0];
 		unset($name[0]);
-		return $entity.".".implode("_", $name);
+		return $entity . "." . implode("_", $name);
 	}
+
 }

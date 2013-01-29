@@ -1,4 +1,5 @@
 <?php
+
 /**
  * NiftyGrid - DataGrid for Nette
  *
@@ -7,10 +8,16 @@
  * @license     New BSD Licence
  * @link        http://addons.nette.org/cs/niftygrid
  */
-namespace NiftyGrid;
 
-class SubGrid extends \Nette\Application\UI\PresenterComponent
-{
+namespace NiftyGrid\Components;
+
+use Nette,
+	Nette\Utils\Html;
+use NiftyGrid,
+	NiftyGrid\Grid;
+
+class SubGrid extends \Nette\Application\UI\PresenterComponent {
+
 	/** @var string */
 	public $name;
 
@@ -39,8 +46,7 @@ class SubGrid extends \Nette\Application\UI\PresenterComponent
 	 * @param string $name
 	 * @return SubGrid
 	 */
-	public function setName($name)
-	{
+	public function setName($name) {
 		$this->name = $name;
 
 		return $this;
@@ -50,8 +56,7 @@ class SubGrid extends \Nette\Application\UI\PresenterComponent
 	 * @param callback|string $label
 	 * @return SubGrid
 	 */
-	public function setLabel($label)
-	{
+	public function setLabel($label) {
 		$this->label = $label;
 
 		return $this;
@@ -61,9 +66,8 @@ class SubGrid extends \Nette\Application\UI\PresenterComponent
 	 * @param array $row
 	 * @return mixed|string
 	 */
-	public function getLabel($row)
-	{
-		if(is_callable($this->label)){
+	public function getLabel($row) {
+		if (is_callable($this->label)) {
 			return call_user_func($this->label, $row);
 		}
 		return $this->label;
@@ -73,8 +77,7 @@ class SubGrid extends \Nette\Application\UI\PresenterComponent
 	 * @param callback|string $class
 	 * @return SubGrid
 	 */
-	public function setClass($class)
-	{
+	public function setClass($class) {
 		$this->class = $class;
 
 		return $this;
@@ -84,9 +87,8 @@ class SubGrid extends \Nette\Application\UI\PresenterComponent
 	 * @param $row
 	 * @return string
 	 */
-	public function getClass($row)
-	{
-		if(is_callable($this->class)){
+	public function getClass($row) {
+		if (is_callable($this->class)) {
 			return call_user_func($this->class, $row);
 		}
 		return $this->class;
@@ -96,8 +98,7 @@ class SubGrid extends \Nette\Application\UI\PresenterComponent
 	 * @param callback|string $link
 	 * @return SubGrid
 	 */
-	public function setLink($link)
-	{
+	public function setLink($link) {
 		$this->link = $link;
 
 		return $this;
@@ -107,17 +108,15 @@ class SubGrid extends \Nette\Application\UI\PresenterComponent
 	 * @param array $row
 	 * @return mixed
 	 */
-	public function getLink($row)
-	{
+	public function getLink($row) {
 		return call_user_func($this->link, $row);
 	}
 
 	/**
 	 * @param callback|string $cellStyle
-	 * @return \Nifty\Grid\SubGrid
+	 * @return SubGrid
 	 */
-	public function setCellStyle($cellStyle)
-	{
+	public function setCellStyle($cellStyle) {
 		$this->cellStyle = $cellStyle;
 
 		return $this;
@@ -126,17 +125,15 @@ class SubGrid extends \Nette\Application\UI\PresenterComponent
 	/**
 	 * @return bool
 	 */
-	public function hasCellStyle()
-	{
+	public function hasCellStyle() {
 		return !empty($this->cellStyle) ? TRUE : FALSE;
 	}
 
 	/**
 	 * @return string
 	 */
-	public function getCellStyle()
-	{
-		if(is_callable($this->cellStyle)){
+	public function getCellStyle() {
+		if (is_callable($this->cellStyle)) {
 			return call_user_func($this->cellStyle, $this->grid);
 		}
 		return $this->cellStyle;
@@ -146,8 +143,7 @@ class SubGrid extends \Nette\Application\UI\PresenterComponent
 	 * @param callback|string $show
 	 * @return Button
 	 */
-	public function setShow($show)
-	{
+	public function setShow($show) {
 		$this->show = $show;
 
 		return $this;
@@ -157,9 +153,8 @@ class SubGrid extends \Nette\Application\UI\PresenterComponent
 	 * @param array $row
 	 * @return callback|mixed|string
 	 */
-	public function getShow($row)
-	{
-		if(is_callable($this->show)){
+	public function getShow($row) {
+		if (is_callable($this->show)) {
 			return (boolean) call_user_func($this->show, $row);
 		}
 		return $this->show;
@@ -169,8 +164,7 @@ class SubGrid extends \Nette\Application\UI\PresenterComponent
 	 * @param Grid $grid
 	 * @return SubGrid
 	 */
-	public function setGrid(Grid $grid)
-	{
+	public function setGrid(Grid $grid) {
 		$this->grid = $grid;
 
 		return $this;
@@ -180,8 +174,7 @@ class SubGrid extends \Nette\Application\UI\PresenterComponent
 	 * @param bool $ajax
 	 * @return SubGrid
 	 */
-	public function setAjax($ajax = TRUE)
-	{
+	public function setAjax($ajax = TRUE) {
 		$this->ajax = $ajax;
 
 		return $this;
@@ -191,8 +184,7 @@ class SubGrid extends \Nette\Application\UI\PresenterComponent
 	 * @param callback $settings
 	 * @return SubGrid
 	 */
-	public function settings($settings)
-	{
+	public function settings($settings) {
 		$this->settings = $settings;
 
 		return $this;
@@ -201,8 +193,7 @@ class SubGrid extends \Nette\Application\UI\PresenterComponent
 	/**
 	 * @return Grid
 	 */
-	public function getGrid()
-	{
+	public function getGrid() {
 		$this->grid->isSubGrid = TRUE;
 		$this->grid->afterConfigureSettings = $this->settings;
 		return $this->grid;
@@ -211,21 +202,21 @@ class SubGrid extends \Nette\Application\UI\PresenterComponent
 	/**
 	 * @param array $row
 	 */
-	public function render($row)
-	{
-		if(!$this->getShow($row)){
+	public function render($row) {
+		if (!$this->getShow($row)) {
 			return false;
 		}
 
-		$el = \Nette\Utils\Html::el("a")
-			->href($this->getLink($row))
-			->addClass($this->getClass($row))
-			->addClass("grid-button")
-			->setTitle($this->getLabel($row));
+		$el = Html::el("a")
+				->href($this->getLink($row))
+				->addClass($this->getClass($row))
+				->addClass("grid-button")
+				->setTitle($this->getLabel($row));
 
-		if($this->ajax){
+		if ($this->ajax) {
 			$el->addClass("grid-ajax");
 		}
 		echo $el;
 	}
+
 }

@@ -1,17 +1,17 @@
 $(function(){
 	$.ajaxSetup({
-		success: function(data){
-			if(data.redirect){
-				$.get(data.redirect);
-			}
-			if(data.snippets){
-				for (var snippet in data.snippets){
-					$("#"+snippet).html(data.snippets[snippet]);
-				}
-			}
-		}
-	});
-
+        success: function(data){
+            if(data.redirect){
+                $.get(data.redirect);
+            }
+            if(data.snippets){
+                for (var snippet in data.snippets){
+                    $("#"+snippet).html(data.snippets[snippet]);
+                }
+            }
+        }
+    });
+	
 	$(".grid-flash-hide").live("click", function() {
 		$(this).parent().parent().fadeOut(300);
 	});
@@ -119,19 +119,20 @@ $(function(){
 
 	function setDatepicker()
 	{
+		if (!$.datepicker) return;
 		$.datepicker.regional['cs'] = {
-			closeText: 'Zavøít',
-			prevText: '&#x3c;Døíve',
-			nextText: 'Pozdìji&#x3e;',
-			currentText: 'Nyní',
-			monthNames: ['leden','únor','bøezen','duben','kvìten','èerven',
-			'èervenec','srpen','záøí','øíjen','listopad','prosinec'],
-			monthNamesShort: ['led','úno','bøe','dub','kvì','èer',
-			'èvc','srp','záø','øíj','lis','pro'],
-			dayNames: ['nedìle', 'pondìlí', 'úterı', 'støeda', 'ètvrtek', 'pátek', 'sobota'],
-			dayNamesShort: ['ne', 'po', 'út', 'st', 'èt', 'pá', 'so'],
-			dayNamesMin: ['ne','po','út','st','èt','pá','so'],
-			weekHeader: 'Tıd',
+			closeText: 'ZavÅ™Ã­t',
+			prevText: '&#x3c;DÅ™Ã­ve',
+			nextText: 'PozdÄ›ji&#x3e;',
+			currentText: 'NynÃ­',
+			monthNames: ['leden','Ãºnor','bÅ™ezen','duben','kvÄ›ten','Äerven',
+			'Äervenec','srpen','zÃ¡Å™Ã­','Å™Ã­jen','listopad','prosinec'],
+			monthNamesShort: ['led','Ãºno','bÅ™e','dub','kvÄ›','Äer',
+			'Ävc','srp','zÃ¡Å™','Å™Ã­j','lis','pro'],
+			dayNames: ['nedÄ›le', 'pondÄ›lÃ­', 'ÃºterÃ½', 'stÅ™eda', 'Ätvrtek', 'pÃ¡tek', 'sobota'],
+			dayNamesShort: ['ne', 'po', 'Ãºt', 'st', 'Ät', 'pÃ¡', 'so'],
+			dayNamesMin: ['ne','po','Ãºt','st','Ät','pÃ¡','so'],
+			weekHeader: 'TÃ½d',
 			dateFormat: 'yy-mm-dd',
 			constrainInput: false,
 			firstDay: 1,

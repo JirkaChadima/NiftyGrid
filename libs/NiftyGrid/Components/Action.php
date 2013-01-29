@@ -1,4 +1,5 @@
 <?php
+
 /**
  * NiftyGrid - DataGrid for Nette
  *
@@ -7,10 +8,14 @@
  * @license     New BSD Licence
  * @link        http://addons.nette.org/cs/niftygrid
  */
-namespace NiftyGrid;
 
-class Action extends \Nette\Application\UI\PresenterComponent
-{
+namespace NiftyGrid\Components;
+
+use NiftyGrid;
+use Nette;
+
+class Action extends \Nette\Application\UI\PresenterComponent {
+
 	/** @var string */
 	public $name;
 
@@ -30,8 +35,7 @@ class Action extends \Nette\Application\UI\PresenterComponent
 	 * @param string $name
 	 * @return Action
 	 */
-	public function setName($name)
-	{
+	public function setName($name) {
 		$this->name = $name;
 
 		return $this;
@@ -41,8 +45,7 @@ class Action extends \Nette\Application\UI\PresenterComponent
 	 * @param string $label
 	 * @return Action
 	 */
-	public function setLabel($label)
-	{
+	public function setLabel($label) {
 		$this->label = $label;
 
 		return $this;
@@ -52,8 +55,7 @@ class Action extends \Nette\Application\UI\PresenterComponent
 	 * @param callback|string $dialog
 	 * @return Action
 	 */
-	public function setConfirmationDialog($dialog)
-	{
+	public function setConfirmationDialog($dialog) {
 		$this->dialog = $dialog;
 
 		return $this;
@@ -63,8 +65,7 @@ class Action extends \Nette\Application\UI\PresenterComponent
 	 * @param callback $callback
 	 * @return Action
 	 */
-	public function setCallback($callback)
-	{
+	public function setCallback($callback) {
 		$this->callback = $callback;
 
 		return $this;
@@ -73,18 +74,15 @@ class Action extends \Nette\Application\UI\PresenterComponent
 	/**
 	 * @return callback
 	 */
-	public function getCallback()
-	{
+	public function getCallback() {
 		return $this->callback;
 	}
-
 
 	/**
 	 * @param string $ajax
 	 * @return Action
 	 */
-	public function setAjax($ajax)
-	{
+	public function setAjax($ajax) {
 		$this->ajax = $ajax;
 
 		return $this;
@@ -92,24 +90,24 @@ class Action extends \Nette\Application\UI\PresenterComponent
 
 	/**
 	 * @return mixed
-	 * @throws UnknownActionCallbackException
+	 * @throws NiftyGrid\UnknownActionCallbackException
 	 */
-	public function getAction()
-	{
-		if(empty($this->callback)){
-			throw new UnknownActionCallbackException("Action $this->name doesn't have callback.");
+	public function getAction() {
+		if (empty($this->callback)) {
+			throw new NiftyGrid\UnknownActionCallbackException("Action $this->name doesn't have callback.");
 		}
 
-		$option = \Nette\Utils\Html::el('option')->setValue($this->name)->setText($this->label);
+		$option = Nette\Utils\Html::el('option')->setValue($this->name)->setText($this->label);
 
-		if($this->ajax){
+		if ($this->ajax) {
 			$option->addClass('grid-ajax');
 		}
 
-		if(!empty($this->dialog)){
+		if (!empty($this->dialog)) {
 			$option->addData("grid-confirm", $this->dialog);
 		}
 
 		return $option;
 	}
+
 }

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * NiftyGrid - DataGrid for Nette
  *
@@ -7,13 +8,14 @@
  * @license     New BSD Licence
  * @link        http://addons.nette.org/cs/niftygrid
  */
+
 namespace NiftyGrid;
 
-use Nette\Utils\Html,
-	NiftyGrid\Grid; // For constant only
+use Nette\Utils\Html;
+use NiftyGrid\Grid; // For constant only
 
-class GlobalButton extends \Nette\Application\UI\PresenterComponent
-{
+class GlobalButton extends \Nette\Application\UI\PresenterComponent {
+
 	/** @var string */
 	private $label;
 
@@ -30,8 +32,7 @@ class GlobalButton extends \Nette\Application\UI\PresenterComponent
 	 * @param string $label
 	 * @return Button
 	 */
-	public function setLabel($label)
-	{
+	public function setLabel($label) {
 		$this->label = $label;
 
 		return $this;
@@ -41,8 +42,7 @@ class GlobalButton extends \Nette\Application\UI\PresenterComponent
 	 * @param callback|string $class
 	 * @return Button
 	 */
-	public function setClass($class)
-	{
+	public function setClass($class) {
 		$this->class = $class;
 
 		return $this;
@@ -52,8 +52,7 @@ class GlobalButton extends \Nette\Application\UI\PresenterComponent
 	 * @param callback|string $link
 	 * @return Button
 	 */
-	public function setLink($link)
-	{
+	public function setLink($link) {
 		$this->link = $link;
 
 		return $this;
@@ -62,9 +61,8 @@ class GlobalButton extends \Nette\Application\UI\PresenterComponent
 	/**
 	 * @return string
 	 */
-	private function getLink()
-	{
-		if(is_callable($this->link)){
+	private function getLink() {
+		if (is_callable($this->link)) {
 			return call_user_func($this->link);
 		}
 		return $this->link;
@@ -74,30 +72,29 @@ class GlobalButton extends \Nette\Application\UI\PresenterComponent
 	 * @param bool $ajax
 	 * @return Button
 	 */
-	public function setAjax($ajax = TRUE)
-	{
+	public function setAjax($ajax = TRUE) {
 		$this->ajax = $ajax;
 
 		return $this;
 	}
 
-	public function render()
-	{
+	public function render() {
 		$el = Html::el("a")
-			->href($this->getLink())
-			->setClass($this->class)
-			->addClass("grid-button")
-			->addClass('btn')
-			->addClass("grid-global-button")
-			->setTitle($this->label);
+				->href($this->getLink())
+				->setClass($this->class)
+				->addClass("grid-button")
+				->addClass('btn')
+				->addClass("grid-global-button")
+				->setTitle($this->label);
 
-		if($this->getName() == Grid::ADD_ROW) {
+		if ($this->getName() == Grid::ADD_ROW) {
 			$el->addClass("grid-add-row");
 		}
 
-		if($this->ajax){
+		if ($this->ajax) {
 			$el->addClass("grid-ajax");
 		}
 		echo $el;
 	}
+
 }

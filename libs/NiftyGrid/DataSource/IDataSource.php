@@ -7,7 +7,7 @@
  * @license     New BSD Licence
  * @link        http://addons.nette.org/cs/niftygrid
  */
-namespace NiftyGrid;
+namespace NiftyGrid\DataSource;
 
 interface IDataSource
 {
@@ -27,6 +27,11 @@ interface IDataSource
 	 */
 	public function getCount($column = "*");
 
+	/**
+	 * Returns count of rows on PHP side (because HAVING conditions doesn't affect on SQL COUNT)
+	 */
+	public function getSelectedRowsCount();
+	
 	/**
 	 * Sort data by given column
 	 * @param string $by
