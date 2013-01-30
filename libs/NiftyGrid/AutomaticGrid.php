@@ -42,6 +42,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	protected $editable = false;
 	protected $filterable = false;
 	protected $removable = false;
+	protected $creatable = false;
 	protected $autoMode = false;
 	protected $defaultUpdateRowCallback = true;
 	protected $defaultDeleteRowCallback = true;
@@ -112,6 +113,16 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	}
 
 	/**
+	 * Globally enables adding.
+	 * 
+	 * @return \NiftyGrid\AutomaticGrid
+	 */
+	public function enableAdding() {
+		$this->creatable = true;
+		return $this;
+	}
+
+	/**
 	 * Globally disables sorting.
 	 * 
 	 * @return \NiftyGrid\AutomaticGrid
@@ -130,7 +141,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		$this->defaultUpdateRowCallback = false;
 		return $this;
 	}
-	
+
 	/**
 	 * Disables default delete row callback that deletes row from the database.
 	 * 
@@ -204,7 +215,13 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 							});
 		}
 
-		// ++ default actions -- create, ~~edit, delete~~
+		if ($this->creatable) {
+			$this->addGlobalButton(Grid::ADD_ROW, _('Add row'))
+					->setClass('inline-add btn-success');
+			if ($this->rowFormCallback === null) {
+				$this->setRowFormCallback(callback($this, 'handleUpdateRow'));
+			}
+		}
 		// ++ custom actions -- ??callbacks, class??
 	}
 
@@ -223,9 +240,11 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		if (!$this->editable) {
 			return;
 		}
-		$this->addButton(\NiftyGrid\Grid::ROW_FORM, _("Inline edit"))
+		$this->addButton(Grid::ROW_FORM, _("Inline edit"))
 				->setClass("inline-edit");
-		$this->setRowFormCallback(callback($this, 'handleUpdateRow'));
+		if ($this->rowFormCallback === null) {
+			$this->setRowFormCallback(callback($this, 'handleUpdateRow'));
+		}
 
 		foreach ($columns as $column) {
 			if ($column->getName() === $this->keyColumn || (!$this->autoMode && empty($this->columnOptions[$column->getName()])) || (!$this->autoMode && empty($this->columnOptions[$column->getName()][self::EDITABLE])) || empty($components[$column->getName()])) {
@@ -378,12 +397,12 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 			call_user_func($callback, $values);
 		}
 	}
-	
+
 	public function handleRemoveRow($primaryKey) {
 		if ($this->defaultDeleteRowCallback) {
 			$columns = $this->cacheResult->getColumns();
 			$table = $columns[0]->getTableName();
-			
+
 			if (!$this->keyColumn) {
 				throw new \NiftyGrid\UnknownColumnException('Key column not set!');
 			}
@@ -399,7 +418,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 				$this->flashMessage(_('There was an error during the communication with the database: ' . $e->getMessage()), 'alert alert-error');
 			}
 		}
-		
+
 		foreach ($this->onDeleteRow as $callback) {
 			call_user_func($callback, $primaryKey);
 		}
@@ -420,7 +439,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 			return $column->getType();
 		}
 	}
-	
+
 	public function getKeyColumn() {
 		return $this->keyColumn;
 	}

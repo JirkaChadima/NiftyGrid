@@ -16,28 +16,28 @@
 	<thead>
 		<tr class="grid-panel">
 			<th colspan="{$colsCount}">
-				<div class="grid-upper-panel">
-				<div n:if="$paginate" class="grid-perPage well well-small pull-left">
-						{$control['gridForm'][$control->name]['perPage']['perPage']->label}
-						{$control['gridForm'][$control->name]['perPage']['perPage']->getControl()}
-						{$control['gridForm'][$control->name]['perPage']['send']->getControl()}
-				</div>
-					<div n:if="$control->hasGlobalButtons()">
-						{foreach $globalButtons as $globalButton}
-							{control $globalButton}
-						{/foreach}
-					</div>
-					<div class="grid-upper-info pull-right well-small well">
-						<p class="grid-results">
-							{!_'Total <strong>%s</strong> values', array($results . '')}
-						 {if $paginate && is_numeric($perPage)}
-							{if (boolean)$results}
-								{_'(Viewing %s to %s values)', array($viewedFrom, $viewedTo)}
+				<div class="grid-upper-panel row-fluid">
+						<div n:if="$paginate" class="grid-perPage well well-small pull-left">
+								{$control['gridForm'][$control->name]['perPage']['perPage']->label}
+								{$control['gridForm'][$control->name]['perPage']['perPage']->getControl()}
+								{$control['gridForm'][$control->name]['perPage']['send']->getControl()}
+						</div>
+						<div n:if="$control->hasGlobalButtons()" class="grid-global-buttons well well-small">
+							{foreach $globalButtons as $globalButton}
+								{control $globalButton}
+							{/foreach}
+						</div>
+						<div class="grid-upper-info well-small well pull-right">
+							<p class="grid-results">
+								{!_'Total <strong>%s</strong> values', array($results . '')}
+							 {if $paginate && is_numeric($perPage)}
+								{if (boolean)$results}
+									{_'(Viewing %s to %s values)', array($viewedFrom, $viewedTo)}
+								{/if}
 							{/if}
-						{/if}
-						</p>
-						<a n:if="$control->isCurrentLinkShown()" n:href="this" class="grid-current-link" title="{_'Get link to this page'}"></a>
-					</div>
+							</p>
+							<a n:if="$control->isCurrentLinkShown()" n:href="this" class="grid-current-link" title="{_'Get link to this page'}"></a>
+						</div>
 				</div>
 			</th>
 		</tr>

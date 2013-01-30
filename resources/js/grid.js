@@ -15,7 +15,7 @@ $(function(){
 	$(".grid-flash-hide").live("click", function() {
 		$(this).parent().parent().fadeOut(300);
 	});
-
+	
 	$(".grid-select-all").live("click", function(){
 		var checkboxes =  $(this).parents("thead").siblings("tbody").children("tr:not(.grid-subgrid-row)").find("td input:checkbox.grid-action-checkbox");
 		if($(this).is(":checked")){
@@ -155,12 +155,22 @@ $(function(){
 		});
 	}
 	setDatepicker();
-	
+
+	function repositionGlobalButtons() {
+		$(".grid-global-buttons").each(function () {
+				var $this = $(this);
+				$this.css({
+					marginLeft: 0 - ($this.outerWidth() / 2)
+				});
+			});
+	}
+	repositionGlobalButtons();
 	// TODO integrate timepicker
 
 	$(this).ajaxStop(function(){
 		setDatepicker();
 		hidePerPageSubmit();
+		repositionGlobalButtons();
 	});
 
 	$("input.grid-editable").live("keypress", function(e) {

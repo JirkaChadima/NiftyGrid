@@ -225,18 +225,46 @@ form.grid-gridForm {
 }
 
 .grid .grid-edited-cell{
-    background-color: #e5e5e5;
+    background-color: #333 !important;
+	color: white;
+	vertical-align: middle;
 }
 
 .grid .grid-subgrid-open{
-    background: url('../images/subgrid_open.png') no-repeat 4px;
+    background-image: url('../images/subgrid_open.png');
+	background-repeat: no-repeat;
+	background-position: 4px;
 }
 .grid .grid-subgrid-close{
-    background: url('../images/subgrid_close.png') no-repeat 4px;
+    background-image: url('../images/subgrid_close.png');
+	background-repeat: no-repeat;
+	background-position: 4px;
+}
+
+.grid .grid-global-buttons {
+	background: #e5e5e5;
+	height: 30px;
+	position: absolute;
+	left: 50%;
+}
+
+.grid .grid-global-buttons .grid-global-button {
+	width: 25px;
+	height: 25px;
+	padding: 0;
+	margin: 0;
+	margin-top: 2px;
+	margin-left: 8px;
+	background-repeat: no-repeat;
+	background-position: 4px;
+}
+
+.grid .grid-global-buttons .grid-global-button:first-child {
+	margin-left: 0;
 }
 
 .grid .grid-add-row{
-    background: url('../images/add.png') no-repeat 4px;
+    background-image: url('../images/add.png');
 }
 
 .grid-flash{
@@ -263,3 +291,8 @@ form.grid-gridForm {
 .grid .inline-edit {
 	 background: url('../images/table_edit.png') no-repeat 4px;
 }
+
+.grid .inline-remove {
+	 background: url('../images/delete.png') no-repeat 4px;
+}
+
