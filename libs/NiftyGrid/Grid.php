@@ -913,7 +913,9 @@ abstract class Grid extends \Nette\Application\UI\Control {
 				}
 			}
 			$this['gridForm'][$this->name]['rowForm']->setDefaults($row);
-			$this['gridForm'][$this->name]['rowForm']->addHidden($this->primaryKey, $this->activeRowForm);
+			if (empty($this['gridForm'][$this->name]['rowForm']->components[$this->primaryKey])) {
+				$this['gridForm'][$this->name]['rowForm']->addHidden($this->primaryKey, $this->activeRowForm);
+			}
 		}
 		if ($this->paginate && is_numeric($this->perPage)) {
 			$this->template->viewedFrom = ((($this->getPaginator()->getPage() - 1) * $this->perPage) + 1);

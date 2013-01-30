@@ -9,7 +9,6 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 
 	// options keys
 	const KEY = 'key';
-	const KEY_ALIAS = 'key_alias';
 	const ORDER = 'order';
 	const ORDER_DESC = 'order_desc';
 	const ORDER_ASC = 'order_asc';
@@ -47,7 +46,6 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	public $onUpdateRow = array();
 	protected $options = array();
 	protected $keyColumn;
-	protected $keyColumnAlias;
 	protected $orderBy;
 
 	/**
@@ -71,9 +69,6 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 			foreach ($options as $col => $attrs) {
 				if (!empty($attrs[self::KEY])) {
 					$this->keyColumn = $col;
-				}
-				if (!empty($attrs[self::KEY_ALIAS])) {
-					$this->keyColumnAlias = $attrs[self::KEY_ALIAS];
 				}
 				if (!empty($attrs[self::ORDER])) {
 					$this->orderBy = $col;
@@ -117,9 +112,6 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		
 		$columns = $cacheResult->getInfo()->getColumns(); // or use show create table to detect types more precisely
 		foreach ($columns as $column) {
-			if ($column->getName() === $this->keyColumn) {
-				continue;
-			}
 			$colOptions = (!empty($this->options[$column->getName()]) ? $this->options[$column->getName()] : array());
 			if (!empty($colOptions[self::ALIAS])) {
 				$name = $colOptions[self::ALIAS];
@@ -127,11 +119,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 				$name = \Nette\Utils\Strings::firstUpper($column->getName());
 			}
 			
-			if ($column->getName() === $this->keyColumnAlias) {
-				$colName = $this->keyColumnAlias;
-			} else {
-				$colName = $column->getName();
-			}
+			$colName = $column->getName();
 			$col = $this->addColumn($colName, $name);
 			
 			if (!empty($colOptions[self::TABLENAME])) {
@@ -163,7 +151,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		$this->setRowFormCallback(callback($this, 'handleUpdateRow'));
 
 		foreach ($columns as $column) {
-			if ($column->getName() === $this->keyColumn || (!$this->autoMode && empty($this->options[$column->getName()])) || (!$this->autoMode && empty($this->options[$column->getName()][self::EDITABLE]))) {
+			if ($column->getName() === $this->keyColumn || (!$this->autoMode && empty($this->options[$column->getName()])) || (!$this->autoMode && empty($this->options[$column->getName()][self::EDITABLE])) || empty($components[$column->getName()])) {
 				continue;
 			}
 			$col = $components[$column->getName()];
@@ -207,7 +195,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 			return;
 		}
 		foreach ($columns as $column) {
-			if ($column->getName() === $this->keyColumn || (!$this->autoMode && empty($this->options[$column->getName()])) || (!$this->autoMode && empty($this->options[$column->getName()][self::FILTERABLE]))) {
+			if (!$this->autoMode && empty($this->options[$column->getName()]) || (!$this->autoMode && empty($this->options[$column->getName()][self::FILTERABLE])) || empty($components[$column->getName()])) {
 				continue;
 			}
 			$col = $components[$column->getName()];
@@ -244,7 +232,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 						$col->setSelectFilter($colOptions[self::ENUM], '--');
 					}
 					break;
-				case self::TYPE_DATETIME: # nothing
+				case self::TYPE_DATETIME: # datetime
 				case \Dibi::DATETIME: # datetime
 				case \Dibi::TIME: # nothing
 				case self::TYPE_TIME:

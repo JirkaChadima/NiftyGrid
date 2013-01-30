@@ -118,7 +118,9 @@
 				{if $control->activeRowForm == $row[$primaryKey] && $control->isEditable()}
 					{$control['gridForm'][$control->name]['rowForm']['send']->getControl()}
 					<a class="grid-rowForm-cancel grid-ajax btn btn-primary btn-small" n:href="this" title="{_"Cancel editing"}"></a>
-					{$control['gridForm'][$control->name]['rowForm'][$primaryKey]->getControl()}
+					{if $control['gridForm'][$control->name]['rowForm'][$primaryKey]->getControl()->getType() === 'hidden'}
+						{$control['gridForm'][$control->name]['rowForm'][$primaryKey]->getControl()}
+					{/if}
 				{else}
 					{foreach $buttons as $button}
 						{control $button $row}
