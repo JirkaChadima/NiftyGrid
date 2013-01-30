@@ -4,10 +4,9 @@ namespace NiftyGrid;
 
 class AutomaticGrid extends \NiftyGrid\Grid {
 	// default options
-
 	const DEFAULT_AUTOCOMPLETE_LIST_LENGTH = 10;
 
-	// options keys
+	// column options keys
 	const KEY = 'key';
 	const ORDER = 'order';
 	const ORDER_DESC = 'order_desc';
@@ -44,7 +43,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	protected $autoMode = false;
 	protected $defaultUpdateRowCallback = true;
 	public $onUpdateRow = array();
-	protected $options = array();
+	protected $columnOptions = array();
 	protected $keyColumn;
 	protected $orderBy;
 
@@ -52,21 +51,21 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	 * Default settings: show all columns, none are filterable, none are editable
 	 * 
 	 * @param \DibiFluent $fluent
-	 * @param array $options
+	 * @param array $columnOptions
 	 */
-	public function __construct(\DibiFluent $fluent, array $options = array()) {
+	public function __construct(\DibiFluent $fluent, array $columnOptions = array(), $actionOptions = array()) {
 		parent::__construct();
 		$this->fluentSource = $fluent;
 		$this->types = array(self::TYPE_NUMERIC, self::TYPE_TEXT, self::TYPE_LONGTEXT, self::TYPE_BOOLEAN, self::TYPE_DATE, self::TYPE_DATETIME, self::TYPE_TIME, self::TYPE_BINARY, self::TYPE_ENUM);
-		$this->options = $options;
+		$this->columnOptions = $columnOptions;
 
 		// set key and orderBy
-		if (empty($options)) {
+		if (empty($columnOptions)) {
 			$this->keyColumn = 'id';
 			$this->orderBy = 'id asc';
 			$this->autoMode = true;
 		} else {
-			foreach ($options as $col => $attrs) {
+			foreach ($columnOptions as $col => $attrs) {
 				if (!empty($attrs[self::KEY])) {
 					$this->keyColumn = $col;
 				}
@@ -76,29 +75,60 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 				}
 			}
 		}
-		
 	}
 
+	/**
+	 * Globally enables editing.
+	 * 
+	 * @return \NiftyGrid\AutomaticGrid
+	 */
 	public function enableEditing() {
 		$this->editable = true;
 		return $this;
 	}
 
+	/**
+	 * Globally enables filtering.
+	 * 
+	 * @return \NiftyGrid\AutomaticGrid
+	 */
 	public function enableFiltering() {
 		$this->filterable = true;
 		return $this;
 	}
 
+	/**
+	 * Globally disables sorting.
+	 * 
+	 * @return \NiftyGrid\AutomaticGrid
+	 */
 	public function disableSorting() {
 		$this->enableSorting = false;
 		return $this;
 	}
 
+	/**
+	 * Disables default update row callback that updates row in the database.
+	 * 
+	 * @return \NiftyGrid\AutomaticGrid
+	 */
 	public function disableDefaultOnUpdateRowCallback() {
 		$this->defaultUpdateRowCallback = false;
 		return $this;
 	}
 
+	/**
+	 * Tries to detect all columns in the datasource and adds them to grid.
+	 * To every column a tablename, alias and a renderer might be added.
+	 * 
+	 * Then all columns are made editable and filterable accordingly to the
+	 * column options or by automatic mode.
+	 * 
+	 * Finally, all actions are added.
+	 * 
+	 * @param \Nette\Application\UI\Presenter $presenter
+	 * @throws GridException
+	 */
 	protected function configure($presenter) {
 		if (empty($this->keyColumn)) {
 			throw new GridException('Missing key column!');
@@ -110,9 +140,9 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		$this->cacheResult = $this->fluentSource->limit(1)->execute();
 		$cacheResult = $this->cacheResult;
 		
-		$columns = $cacheResult->getInfo()->getColumns(); // or use show create table to detect types more precisely
+		$columns = $cacheResult->getInfo()->getColumns();
 		foreach ($columns as $column) {
-			$colOptions = (!empty($this->options[$column->getName()]) ? $this->options[$column->getName()] : array());
+			$colOptions = (!empty($this->columnOptions[$column->getName()]) ? $this->columnOptions[$column->getName()] : array());
 			if (!empty($colOptions[self::ALIAS])) {
 				$name = $colOptions[self::ALIAS];
 			} else {
@@ -133,16 +163,26 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 					return call_user_func($rndr, $row, $self);
 				});
 			}
-
-			// ++ default actions -- create, edit, delete
-			// ++ custom actions -- ??callbacks, class??
-			
 		}
 		$this->makeEditableColumns($columns, $this['columns']->components);
 		$this->makeFilterableColumns($columns, $this['columns']->components);
+		
+		// ++ default actions -- create, edit, delete
+		// ++ custom actions -- ??callbacks, class??
 	}
 
-	protected function makeEditableColumns($columns, $components) {
+	/**
+	 * If the grid is globally editable and no column options are set, 
+	 * all columns except the primary key column are set to be editable.
+	 * The editing type is decided by the column type that is either specified
+	 * manually or detected by Dibi.
+	 * 
+	 * Supported edit modes: boolean, long text, text, date and select/enum.
+	 * 
+	 * @param array of DibiColumnInfo $columns
+	 * @param array of \Nette\Application\UI\PresenterComponent $components
+	 */
+	private function makeEditableColumns($columns, $components) {
 		if (!$this->editable) {
 			return;
 		}
@@ -151,7 +191,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		$this->setRowFormCallback(callback($this, 'handleUpdateRow'));
 
 		foreach ($columns as $column) {
-			if ($column->getName() === $this->keyColumn || (!$this->autoMode && empty($this->options[$column->getName()])) || (!$this->autoMode && empty($this->options[$column->getName()][self::EDITABLE])) || empty($components[$column->getName()])) {
+			if ($column->getName() === $this->keyColumn || (!$this->autoMode && empty($this->columnOptions[$column->getName()])) || (!$this->autoMode && empty($this->columnOptions[$column->getName()][self::EDITABLE])) || empty($components[$column->getName()])) {
 				continue;
 			}
 			$col = $components[$column->getName()];
@@ -175,7 +215,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 					$col->setDateEditable();
 					break;
 				case self::TYPE_ENUM: # enum
-					$colOptions = (!empty($this->options[$column->getName()]) ? $this->options[$column->getName()] : array() );
+					$colOptions = (!empty($this->columnOptions[$column->getName()]) ? $this->columnOptions[$column->getName()] : array() );
 					if (!empty($colOptions[self::ENUM])) {
 						$col->setSelectEditable($colOptions[self::ENUM]);
 					}
@@ -190,12 +230,22 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		}
 	}
 
-	protected function makeFilterableColumns($columns, $components) {
+	/**
+	 * If the grid is globally filterable and no column options are set,
+	 * all columns are made filterable. The filter type is set either manually
+	 * in columns config or detected automatically by Dibi.
+	 * 
+	 * Supported filter types are boolean, text, numericx, date and select/enum.
+	 * 
+	 * @param array of DibiColumnInfo $columns
+	 * @param array of \Nette\Application\UI\PresenterComponent $components
+	 */
+	private function makeFilterableColumns($columns, $components) {
 		if (!$this->filterable) {
 			return;
 		}
 		foreach ($columns as $column) {
-			if (!$this->autoMode && empty($this->options[$column->getName()]) || (!$this->autoMode && empty($this->options[$column->getName()][self::FILTERABLE])) || empty($components[$column->getName()])) {
+			if (!$this->autoMode && empty($this->columnOptions[$column->getName()]) || (!$this->autoMode && empty($this->columnOptions[$column->getName()][self::FILTERABLE])) || empty($components[$column->getName()])) {
 				continue;
 			}
 			$col = $components[$column->getName()];
@@ -208,7 +258,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 				case self::TYPE_LONGTEXT: # nothing
 				case \Dibi::TEXT: # text
 					$col->setTextFilter();
-					$colOptions = (!empty($this->options[$column->getName()]) ? $this->options[$column->getName()] : array() );
+					$colOptions = (!empty($this->columnOptions[$column->getName()]) ? $this->columnOptions[$column->getName()] : array() );
 					if (!empty($colOptions[self::AUTOCOMPLETE])) {
 						if (!empty($colOptions[self::AUTOCOMPLETE_LENGTH])) {
 							$col->setAutoComplete($colOptions[self::AUTOCOMPLETE_LENGTH]);
@@ -227,7 +277,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 					$col->setDateFilter();
 					break;
 				case self::TYPE_ENUM: # enum
-					$colOptions = (!empty($this->options[$column->getName()]) ? $this->options[$column->getName()] : array() );
+					$colOptions = (!empty($this->columnOptions[$column->getName()]) ? $this->columnOptions[$column->getName()] : array() );
 					if (!empty($colOptions[self::ENUM])) {
 						$col->setSelectFilter($colOptions[self::ENUM], '--');
 					}
@@ -242,6 +292,15 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		}
 	}
 
+	/**
+	 * Handles inline edit action, there's the deafult action that tries
+	 * to save the row in the database. You may turn this action off
+	 * by calling AutomaticGrid::disableDefaultOnUpdateRowCallback method
+	 * and add more onUpdateRow methods to the appropriate array.
+	 * 
+	 * @param array $values
+	 * @throws \NiftyGrid\UnknownColumnException When key column is not found.
+	 */
 	public function handleUpdateRow($values) {
 		if ($this->defaultUpdateRowCallback) {
 			$columns = $this->cacheResult->getColumns();
@@ -283,11 +342,17 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		}
 	}
 
+	/**
+	 * Detects column type either from the options or from the DibiColumnInfo
+	 * 
+	 * @param \DibiColumnInfo $column
+	 * @return string column type
+	 */
 	private function getColumnType($column) {
-		if (!empty($this->options[$column->getName()]) &&
-				!empty($this->options[$column->getName()][self::TYPE]) &&
-				in_array($this->options[$column->getName()][self::TYPE], $this->types)) {
-			return $this->options[$column->getName()][self::TYPE];
+		if (!empty($this->columnOptions[$column->getName()]) &&
+				!empty($this->columnOptions[$column->getName()][self::TYPE]) &&
+				in_array($this->columnOptions[$column->getName()][self::TYPE], $this->types)) {
+			return $this->columnOptions[$column->getName()][self::TYPE];
 		} else {
 			return $column->getType();
 		}
