@@ -4,6 +4,7 @@ namespace NiftyGrid;
 
 class AutomaticGrid extends \NiftyGrid\Grid {
 	// default options
+
 	const DEFAULT_AUTOCOMPLETE_LIST_LENGTH = 10;
 
 	// column options keys
@@ -31,18 +32,21 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	const TYPE_TIME = 'tt';
 	const TYPE_BINARY = 'bin';
 	const TYPE_ENUM = 'e';
+
 	private $types;
 
 	/** @var \DibiFluent */
 	protected $fluentSource;
 	protected $cacheResult;
-	
 	// grid options
 	protected $editable = false;
 	protected $filterable = false;
+	protected $removable = false;
 	protected $autoMode = false;
 	protected $defaultUpdateRowCallback = true;
+	protected $defaultDeleteRowCallback = true;
 	public $onUpdateRow = array();
+	public $onDeleteRow = array();
 	protected $columnOptions = array();
 	protected $keyColumn;
 	protected $orderBy;
@@ -88,6 +92,16 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	}
 
 	/**
+	 * Globally enables removing.
+	 * 
+	 * @return \NiftyGrid\AutomaticGrid
+	 */
+	public function enableRemoving() {
+		$this->removable = true;
+		return $this;
+	}
+
+	/**
 	 * Globally enables filtering.
 	 * 
 	 * @return \NiftyGrid\AutomaticGrid
@@ -116,6 +130,16 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		$this->defaultUpdateRowCallback = false;
 		return $this;
 	}
+	
+	/**
+	 * Disables default delete row callback that deletes row from the database.
+	 * 
+	 * @return \NiftyGrid\AutomaticGrid
+	 */
+	public function disableDefaultOnDeleteRowCallback() {
+		$this->defaultDeleteRowCallback = false;
+		return $this;
+	}
 
 	/**
 	 * Tries to detect all columns in the datasource and adds them to grid.
@@ -139,7 +163,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		$this->setDataSource(new \NiftyGrid\DataSource\DibiFluentDataSource($this->fluentSource, $this->keyColumn));
 		$this->cacheResult = $this->fluentSource->limit(1)->execute();
 		$cacheResult = $this->cacheResult;
-		
+
 		$columns = $cacheResult->getInfo()->getColumns();
 		foreach ($columns as $column) {
 			$colOptions = (!empty($this->columnOptions[$column->getName()]) ? $this->columnOptions[$column->getName()] : array());
@@ -148,26 +172,39 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 			} else {
 				$name = \Nette\Utils\Strings::firstUpper($column->getName());
 			}
-			
+
 			$colName = $column->getName();
 			$col = $this->addColumn($colName, $name);
-			
+
 			if (!empty($colOptions[self::TABLENAME])) {
 				$col->setTableName($colOptions[self::TABLENAME] . '.' . $colName);
 			}
-			
+
 			if (!empty($colOptions[self::RENDERER])) {
 				$rndr = $colOptions[self::RENDERER];
 				$self = $this;
 				$col->setRenderer(function ($row) use ($self, $rndr) {
-					return call_user_func($rndr, $row, $self);
-				});
+							return call_user_func($rndr, $row, $self);
+						});
 			}
 		}
 		$this->makeEditableColumns($columns, $this['columns']->components);
 		$this->makeFilterableColumns($columns, $this['columns']->components);
-		
-		// ++ default actions -- create, edit, delete
+
+		if ($this->removable) {
+			$self = $this;
+			$this->addButton('remove')
+					->setLabel(_('Remove row'))
+					->setClass('inline-remove')
+					->setLink(function($row) use ($self) {
+								return $self->link("removeRow!", array('primaryKey' => $row[$self->getKeyColumn()]));
+							})
+					->setConfirmationDialog(function($row) {
+								return _("Are you sure? This row will be deleted forever!");
+							});
+		}
+
+		// ++ default actions -- create, ~~edit, delete~~
 		// ++ custom actions -- ??callbacks, class??
 	}
 
@@ -305,7 +342,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		if ($this->defaultUpdateRowCallback) {
 			$columns = $this->cacheResult->getColumns();
 			$table = $columns[0]->getTableName();
-			
+
 			if (!$this->keyColumn) {
 				throw new \NiftyGrid\UnknownColumnException('Key column not set!');
 			}
@@ -317,14 +354,14 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 			$id = $values[$this->keyColumn];
 			unset($values[$this->keyColumn]);
 
-			foreach($values as $colname => $val) {
+			foreach ($values as $colname => $val) {
 				$tableName = $this['columns']->components[$colname]->tableName;
-				if(!empty($this['columns']->components[$colname]) && !empty($tableName)) {
+				if (!empty($this['columns']->components[$colname]) && !empty($tableName)) {
 					$values[$tableName] = $val;
 					unset($values[$colname]);
 				}
 			}
-			
+
 			try {
 				$this->fluentSource
 						->getConnection()
@@ -339,6 +376,32 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 
 		foreach ($this->onUpdateRow as $callback) {
 			call_user_func($callback, $values);
+		}
+	}
+	
+	public function handleRemoveRow($primaryKey) {
+		if ($this->defaultDeleteRowCallback) {
+			$columns = $this->cacheResult->getColumns();
+			$table = $columns[0]->getTableName();
+			
+			if (!$this->keyColumn) {
+				throw new \NiftyGrid\UnknownColumnException('Key column not set!');
+			}
+
+			try {
+				$this->fluentSource
+						->getConnection()
+						->delete($table)
+						->where('%n = %i', $this->keyColumn, $primaryKey)
+						->execute();
+				$this->flashMessage(_('Row was removed.'), 'alert alert-success');
+			} catch (\DibiDriverException $e) {
+				$this->flashMessage(_('There was an error during the communication with the database: ' . $e->getMessage()), 'alert alert-error');
+			}
+		}
+		
+		foreach ($this->onDeleteRow as $callback) {
+			call_user_func($callback, $primaryKey);
 		}
 	}
 
@@ -356,6 +419,10 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		} else {
 			return $column->getType();
 		}
+	}
+	
+	public function getKeyColumn() {
+		return $this->keyColumn;
 	}
 
 }

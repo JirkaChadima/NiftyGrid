@@ -243,11 +243,8 @@ abstract class Grid extends \Nette\Application\UI\Control {
 	 * @throws DuplicateButtonException
 	 */
 	public function addButton($name, $label = NULL) {
-		if (!empty($this['buttons']->components[$name])) {
-			throw new DuplicateButtonException("Button $name already exists.");
-		}
-		$button = new Components\Button($this['buttons'], $name);
 		if ($name == self::ROW_FORM) {
+			$button = new Components\Button($this['buttons'], $name);
 			$self = $this;
 			$primaryKey = $this->primaryKey;
 			$button->setLink(function($row) use($self, $primaryKey) {
