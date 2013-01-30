@@ -148,6 +148,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 
 			// ++ default actions -- create, edit, delete
 			// ++ custom actions -- ??callbacks, class??
+			
 		}
 		$this->makeEditableColumns($columns, $this['columns']->components);
 		$this->makeFilterableColumns($columns, $this['columns']->components);
@@ -277,12 +278,16 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 				}
 			}
 			
-			$this->fluentSource
-					->getConnection()
-					->update($table, $values)
-					->where('%n = %i', $this->keyColumn, $id)
-					->execute();
-			$this->flashMessage(_('Row was updated.'), 'alert alert-success');
+			try {
+				$this->fluentSource
+						->getConnection()
+						->update($table, $values)
+						->where('%n = %i', $this->keyColumn, $id)
+						->execute();
+				$this->flashMessage(_('Row was updated.'), 'alert alert-success');
+			} catch (\DibiDriverException $e) {
+				$this->flashMessage(_('There was an error during the communication with the database: ' . $e->getMessage()), 'alert alert-error');
+			}
 		}
 
 		foreach ($this->onUpdateRow as $callback) {
