@@ -18,6 +18,10 @@ use NiftyGrid,
 
 class Column extends \Nette\Application\UI\PresenterComponent {
 
+	const DATE_ONLY = 'data-date-only';
+	const TIME_ONLY = 'data-date-time-only';
+	const DATE_TIME = 'data-datetime';
+
 	/** @var string */
 	public $name;
 
@@ -57,6 +61,9 @@ class Column extends \Nette\Application\UI\PresenterComponent {
 	/** @var bool */
 	public $editable = FALSE;
 
+	/** @var string */
+	public $datetimeType = null;
+	
 	/** @var Grid */
 	public $parent;
 
@@ -276,13 +283,43 @@ class Column extends \Nette\Application\UI\PresenterComponent {
 	 * @return Column
 	 * @throws NiftyGrid\DuplicateEditableColumnException
 	 */
-	public function setDateEditable() {
+	public function setDatetimeEditable($type) {
 		if ($this->editable) {
 			throw new NiftyGrid\DuplicateEditableColumnException("Column $this->name is already editable.");
 		}
-		$this->parent['gridForm'][$this->parent->name]['rowForm']->addText($this->name, NULL)->getControlPrototype()->addClass("grid-datepicker")->addClass("grid-editable");
-
+		if (!$type) {
+			$type = self::DATE_TIME;
+		}
+		$options = array(
+			'data-date-allowemptyvalue' => true,
+			'data-date-today-highlight' => true,
+			'data-date-language' => 'en', // TODO
+			'data-date-week-start' => '1',
+		);
+		switch($type) {
+			case self::DATE_ONLY:
+				$options['data-date-min-view'] = 2;
+				$options['data-date-format'] = 'yyyy-mm-dd';
+				break;
+			case self::TIME_ONLY:
+				$options['data-date-max-view'] = 1;
+				$options['data-date-start-view'] = 1;
+				$options['data-date-format'] = 'hh:ii:ss';
+				break;
+			default:
+				$options['data-date-format'] = 'yyyy-mm-dd hh:ii:ss';
+				break;
+		}
+		
+		$this->parent['gridForm'][$this->parent->name]['rowForm']
+				->addText($this->name, NULL)
+				->getControlPrototype()
+				->class("grid-datetimepicker")
+				->addClass("grid-editable")
+				->addAttributes($options);
+		
 		$this->editable = TRUE;
+		$this->datetimeType = $type;
 
 		return $this;
 	}
@@ -356,8 +393,36 @@ class Column extends \Nette\Application\UI\PresenterComponent {
 	/**
 	 * @return Column
 	 */
-	public function setDateFilter() {
-		$this->parent['gridForm'][$this->parent->name]['filter']->addText($this->name, $this->label . ":")->getControlPrototype()->class("grid-datepicker")->addAttributes(array('data-date-allowemptyvalue' => true));
+	public function setDatetimeFilter($type) {
+		if (!$type) {
+			$type = self::DATE_TIME;
+		}
+		$options = array(
+			'data-date-allowemptyvalue' => true,
+			'data-date-today-highlight' => true,
+			'data-date-language' => 'en', // TODO
+			'data-date-week-start' => '1',
+		);
+		switch($type) {
+			case self::DATE_ONLY:
+				$options['data-date-min-view'] = 2;
+				$options['data-date-format'] = 'yyyy-mm-dd';
+				break;
+			case self::TIME_ONLY:
+				$options['data-date-max-view'] = 1;
+				$options['data-date-start-view'] = 1;
+				$options['data-date-format'] = 'hh:ii:ss';
+				break;
+			default:
+				$options['data-date-format'] = 'yyyy-mm-dd hh:ii:ss';
+				break;
+		}
+
+		$this->parent['gridForm'][$this->parent->name]['filter']
+				->addText($this->name, $this->label . ":")
+				->getControlPrototype()
+				->class("grid-datetimepicker")
+				->addAttributes($options);
 		$this->filterType = FilterCondition::DATE;
 
 		return $this;

@@ -99,7 +99,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	 * @var array
 	 */
 	public $onInsertRow = array();
-	
+
 	/**
 	 * Delete row callbacks
 	 * @var array
@@ -201,6 +201,22 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 				$col->setRenderer(function ($row) use ($self, $rndr) {
 							return call_user_func($rndr, $row, $self);
 						});
+			} else {
+				if ($this->getColumnType($column) === self::TYPE_TIME) {
+					$col->setRenderer(function ($row) use($colName) {
+								if ($row[$colName] instanceof \DateTime) {
+									return $row[$colName]->format('H:i:s');
+								}
+								return $row[$colName];
+							});
+				} elseif ($this->getColumnType($column) === self::TYPE_DATE) {
+					$col->setRenderer(function ($row) use($colName) {
+								if ($row[$colName] instanceof \DateTime) {
+									return $row[$colName]->format('Y-m-d');
+								}
+								return $row[$colName];
+							});
+				}
 			}
 		}
 		$this->makeEditableColumns($columns, $this['columns']->components);
@@ -271,20 +287,24 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 				case \Dibi::FLOAT: # numbers
 					$col->setTextEditable();
 					break;
-				case self::TYPE_DATE: # date
-				case \Dibi::DATE: # date
-					$col->setDateEditable();
-					break;
 				case self::TYPE_ENUM: # enum
 					$colOptions = (!empty($this->columnOptions[$column->getName()]) ? $this->columnOptions[$column->getName()] : array() );
 					if (!empty($colOptions[self::ENUM])) {
 						$col->setSelectEditable($colOptions[self::ENUM]);
 					}
 					break;
-				case self::TYPE_DATETIME: # nothing
-				case \Dibi::DATETIME: # nothing
-				case self::TYPE_TIME:
-				case \Dibi::TIME: # nothing
+				case self::TYPE_DATETIME: # datetime
+				case \Dibi::DATETIME: # datetime
+					$col->setDatetimeEditable(Components\Column::DATE_TIME);
+					break;
+				case self::TYPE_DATE: # date
+				case \Dibi::DATE: # date
+					$col->setDatetimeEditable(Components\Column::DATE_ONLY);
+					break;
+				case self::TYPE_TIME: # time
+				case \Dibi::TIME: # time
+					$col->setDatetimeEditable(Components\Column::TIME_ONLY);
+					break;
 				case self::TYPE_BINARY: # nothing
 				case \Dibi::BINARY: # nothing
 			}
@@ -333,10 +353,6 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 				case \Dibi::FLOAT: # numbers
 					$col->setNumericFilter();
 					break;
-				case self::TYPE_DATE: # date
-				case \Dibi::DATE: # date
-					$col->setDateFilter();
-					break;
 				case self::TYPE_ENUM: # enum
 					$colOptions = (!empty($this->columnOptions[$column->getName()]) ? $this->columnOptions[$column->getName()] : array() );
 					if (!empty($colOptions[self::ENUM])) {
@@ -345,14 +361,21 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 					break;
 				case self::TYPE_DATETIME: # datetime
 				case \Dibi::DATETIME: # datetime
-				case \Dibi::TIME: # nothing
-				case self::TYPE_TIME:
+					$col->setDatetimeFilter(Components\Column::DATE_TIME);
+					break;
+				case self::TYPE_DATE: # date
+				case \Dibi::DATE: # date
+					$col->setDatetimeFilter(Components\Column::DATE_ONLY);
+					break;
+				case \Dibi::TIME: # time
+				case self::TYPE_TIME: # time
+					$col->setDatetimeFilter(Components\Column::TIME_ONLY);
+					break;
 				case \Dibi::BINARY: # nothing
 				case self::TYPE_BINARY: # nothing
 			}
 		}
 	}
-
 
 	public function handleUpdateRow($values) {
 		if (!$this->keyColumn) {
@@ -393,7 +416,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 			if (!$values[$this->keyColumn]) {
 				throw new \NiftyGrid\UnknownColumnException('Key column not found!');
 			}
-			
+
 			$id = $values[$this->keyColumn];
 			unset($values[$this->keyColumn]);
 
@@ -417,7 +440,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 			}
 		}
 	}
-	
+
 	/**
 	 * If the default insert row callback is allowed, it tries to insert
 	 * values into the database table.
@@ -428,7 +451,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		if ($this->defaultInsertRowCallbackEnabled) {
 			$columns = $this->cacheResult->getColumns();
 			$table = $columns[0]->getTableName();
-			
+
 			foreach ($values as $colname => $val) {
 				$tableName = $this['columns']->components[$colname]->tableName;
 				if (!empty($this['columns']->components[$colname]) && !empty($tableName)) {
@@ -447,7 +470,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 			}
 		}
 	}
-	
+
 	/**
 	 * Handles row removing if allowed.
 	 * 
