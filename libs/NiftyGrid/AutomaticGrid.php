@@ -209,7 +209,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 								}
 								return $row[$colName];
 							});
-				} elseif ($this->getColumnType($column) === self::TYPE_DATE) {
+				} elseif ($this->getColumnType($column) === self::TYPE_DATE || $this->getColumnType($column) === \Dibi::DATE) {
 					$col->setRenderer(function ($row) use($colName) {
 								if ($row[$colName] instanceof \DateTime) {
 									return $row[$colName]->format('Y-m-d');
