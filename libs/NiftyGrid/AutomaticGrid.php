@@ -39,18 +39,92 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	protected $fluentSource;
 	protected $cacheResult;
 	// grid options
+	/**
+	 * Is allowed editing
+	 * @var bool
+	 */
 	protected $editable = false;
+
+	/**
+	 * Is allowed filtering
+	 * @var bool
+	 */
 	protected $filterable = false;
+
+	/**
+	 * Is allowed removing of rows
+	 * @var bool
+	 */
 	protected $removable = false;
+
+	/**
+	 * Is allowed adding of rows
+	 * @var bool
+	 */
 	protected $creatable = false;
+
+	/**
+	 * If no column options are set, grid is trying to do all by itself.
+	 * Influences editable and filterable columns.
+	 * @var bool
+	 */
 	protected $autoMode = false;
-	protected $defaultUpdateRowCallback = true;
-	protected $defaultDeleteRowCallback = true;
+
+	/**
+	 * If default insert row callback is active.
+	 * @var bool
+	 */
+	protected $defaultInsertRowCallbackEnabled = true;
+
+	/**
+	 * If default update row callback is active.
+	 * @var bool
+	 */
+	protected $defaultUpdateRowCallbackEnabled = true;
+
+	/**
+	 * If default delete row callback is active.
+	 * @var bool
+	 */
+	protected $defaultDeleteRowCallbackEnabled = true;
+
+	/**
+	 * Update row callbacks
+	 * @var array
+	 */
 	public $onUpdateRow = array();
+
+	/**
+	 * Insert row callbacks
+	 * @var array
+	 */
+	public $onInsertRow = array();
+	
+	/**
+	 * Delete row callbacks
+	 * @var array
+	 */
 	public $onDeleteRow = array();
+
+	/**
+	 * Specific options for grid columns
+	 * @var array
+	 */
 	protected $columnOptions = array();
+
+	/**
+	 * Primary key column name, without it the grid cannot be shown. If none is
+	 * specified in columnOptions, id is automatically chosen.
+	 * @var string
+	 */
 	protected $keyColumn;
-	protected $orderBy;
+
+	/**
+	 * Default order by clause. If none is specified in columnOptions,
+	 * id is automatically chosen.
+	 * @var string
+	 */
+	protected $defaultOrderBy;
 
 	/**
 	 * Default settings: show all columns, none are filterable, none are editable
@@ -58,7 +132,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	 * @param \DibiFluent $fluent
 	 * @param array $columnOptions
 	 */
-	public function __construct(\DibiFluent $fluent, array $columnOptions = array(), $actionOptions = array()) {
+	public function __construct(\DibiFluent $fluent, array $columnOptions = array(), $actionOptions = array(), $globalButtonOptions = array()) {
 		parent::__construct();
 		$this->fluentSource = $fluent;
 		$this->types = array(self::TYPE_NUMERIC, self::TYPE_TEXT, self::TYPE_LONGTEXT, self::TYPE_BOOLEAN, self::TYPE_DATE, self::TYPE_DATETIME, self::TYPE_TIME, self::TYPE_BINARY, self::TYPE_ENUM);
@@ -67,7 +141,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		// set key and orderBy
 		if (empty($columnOptions)) {
 			$this->keyColumn = 'id';
-			$this->orderBy = 'id asc';
+			$this->defaultOrderBy = 'id asc';
 			$this->autoMode = true;
 		} else {
 			foreach ($columnOptions as $col => $attrs) {
@@ -75,81 +149,11 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 					$this->keyColumn = $col;
 				}
 				if (!empty($attrs[self::ORDER])) {
-					$this->orderBy = $col;
-					$this->orderBy .= ($attrs[self::ORDER_DESC] ? ' desc' : ' asc');
+					$this->defaultOrderBy = $col;
+					$this->defaultOrderBy .= ($attrs[self::ORDER_DESC] ? ' desc' : ' asc');
 				}
 			}
 		}
-	}
-
-	/**
-	 * Globally enables editing.
-	 * 
-	 * @return \NiftyGrid\AutomaticGrid
-	 */
-	public function enableEditing() {
-		$this->editable = true;
-		return $this;
-	}
-
-	/**
-	 * Globally enables removing.
-	 * 
-	 * @return \NiftyGrid\AutomaticGrid
-	 */
-	public function enableRemoving() {
-		$this->removable = true;
-		return $this;
-	}
-
-	/**
-	 * Globally enables filtering.
-	 * 
-	 * @return \NiftyGrid\AutomaticGrid
-	 */
-	public function enableFiltering() {
-		$this->filterable = true;
-		return $this;
-	}
-
-	/**
-	 * Globally enables adding.
-	 * 
-	 * @return \NiftyGrid\AutomaticGrid
-	 */
-	public function enableAdding() {
-		$this->creatable = true;
-		return $this;
-	}
-
-	/**
-	 * Globally disables sorting.
-	 * 
-	 * @return \NiftyGrid\AutomaticGrid
-	 */
-	public function disableSorting() {
-		$this->enableSorting = false;
-		return $this;
-	}
-
-	/**
-	 * Disables default update row callback that updates row in the database.
-	 * 
-	 * @return \NiftyGrid\AutomaticGrid
-	 */
-	public function disableDefaultOnUpdateRowCallback() {
-		$this->defaultUpdateRowCallback = false;
-		return $this;
-	}
-
-	/**
-	 * Disables default delete row callback that deletes row from the database.
-	 * 
-	 * @return \NiftyGrid\AutomaticGrid
-	 */
-	public function disableDefaultOnDeleteRowCallback() {
-		$this->defaultDeleteRowCallback = false;
-		return $this;
 	}
 
 	/**
@@ -222,7 +226,8 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 				$this->setRowFormCallback(callback($this, 'handleUpdateRow'));
 			}
 		}
-		// ++ custom actions -- ??callbacks, class??
+		// ++ custom actions
+		// ++ custom global buttons
 	}
 
 	/**
@@ -348,28 +353,47 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		}
 	}
 
+
+	public function handleUpdateRow($values) {
+		if (!$this->keyColumn) {
+			throw new \NiftyGrid\UnknownColumnException('Key column is not set!');
+		}
+
+		if (!empty($values[$this->keyColumn])) { // if there is a key, it is probably an update
+			if (!$this->editable) {
+				return;
+			}
+			$this->defaultUpdateRowCallback($values);
+			foreach ($this->onUpdateRow as $callback) {
+				call_user_func($callback, $values);
+			}
+		} else { // if there is no key, it is probably an insert
+			if (!$this->creatable) {
+				return;
+			}
+			$this->defaultInsertRowCallback($values);
+			foreach ($this->onInsertRow as $callback) {
+				call_user_func($callback, $values);
+			}
+		}
+	}
+
 	/**
-	 * Handles inline edit action, there's the deafult action that tries
-	 * to save the row in the database. You may turn this action off
-	 * by calling AutomaticGrid::disableDefaultOnUpdateRowCallback method
-	 * and add more onUpdateRow methods to the appropriate array.
+	 * If the default udpate row callback is allowed, it tries to set the values
+	 * in the row with passed $primeryKey field
 	 * 
 	 * @param array $values
-	 * @throws \NiftyGrid\UnknownColumnException When key column is not found.
+	 * @throws \NiftyGrid\UnknownColumnException
 	 */
-	public function handleUpdateRow($values) {
-		if ($this->defaultUpdateRowCallback) {
+	private function defaultUpdateRowCallback($values) {
+		if ($this->defaultUpdateRowCallbackEnabled) {
 			$columns = $this->cacheResult->getColumns();
 			$table = $columns[0]->getTableName();
-
-			if (!$this->keyColumn) {
-				throw new \NiftyGrid\UnknownColumnException('Key column not set!');
-			}
 
 			if (!$values[$this->keyColumn]) {
 				throw new \NiftyGrid\UnknownColumnException('Key column not found!');
 			}
-
+			
 			$id = $values[$this->keyColumn];
 			unset($values[$this->keyColumn]);
 
@@ -392,14 +416,52 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 				$this->flashMessage(_('There was an error during the communication with the database: ' . $e->getMessage()), 'alert alert-error');
 			}
 		}
-
-		foreach ($this->onUpdateRow as $callback) {
-			call_user_func($callback, $values);
+	}
+	
+	/**
+	 * If the default insert row callback is allowed, it tries to insert
+	 * values into the database table.
+	 * 
+	 * @param array $values
+	 */
+	private function defaultInsertRowCallback($values) {
+		if ($this->defaultInsertRowCallbackEnabled) {
+			$columns = $this->cacheResult->getColumns();
+			$table = $columns[0]->getTableName();
+			
+			foreach ($values as $colname => $val) {
+				$tableName = $this['columns']->components[$colname]->tableName;
+				if (!empty($this['columns']->components[$colname]) && !empty($tableName)) {
+					$values[$tableName] = $val;
+					unset($values[$colname]);
+				}
+			}
+			try {
+				$this->fluentSource
+						->getConnection()
+						->insert($table, $values)
+						->execute();
+				$this->flashMessage(_('Row was inserted.'), 'alert alert-success');
+			} catch (\DibiDriverException $e) {
+				$this->flashMessage(_('There was an error during the communication with the database: ' . $e->getMessage()), 'alert alert-error');
+			}
 		}
 	}
-
+	
+	/**
+	 * Handles row removing if allowed.
+	 * 
+	 * If the default deleteRowCallback is enabled, it is processed. Then all
+	 * other onDeleteRow callback are called. 
+	 * 
+	 * @param mixed $primaryKey
+	 * @throws \NiftyGrid\UnknownColumnException if key column is not found
+	 */
 	public function handleRemoveRow($primaryKey) {
-		if ($this->defaultDeleteRowCallback) {
+		if (!$this->removable) {
+			return;
+		}
+		if ($this->defaultDeleteRowCallbackEnabled) {
 			$columns = $this->cacheResult->getColumns();
 			$table = $columns[0]->getTableName();
 
@@ -440,8 +502,92 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		}
 	}
 
+	/**
+	 * Getter for $keyColumn attribute
+	 * @return string
+	 */
 	public function getKeyColumn() {
 		return $this->keyColumn;
+	}
+
+	/**
+	 * Globally enables editing.
+	 * 
+	 * @return \NiftyGrid\AutomaticGrid
+	 */
+	public function enableEditing() {
+		$this->editable = true;
+		return $this;
+	}
+
+	/**
+	 * Globally enables removing.
+	 * 
+	 * @return \NiftyGrid\AutomaticGrid
+	 */
+	public function enableRemoving() {
+		$this->removable = true;
+		return $this;
+	}
+
+	/**
+	 * Globally enables filtering.
+	 * 
+	 * @return \NiftyGrid\AutomaticGrid
+	 */
+	public function enableFiltering() {
+		$this->filterable = true;
+		return $this;
+	}
+
+	/**
+	 * Globally enables adding.
+	 * 
+	 * @return \NiftyGrid\AutomaticGrid
+	 */
+	public function enableAdding() {
+		$this->creatable = true;
+		return $this;
+	}
+
+	/**
+	 * Globally disables sorting.
+	 * 
+	 * @return \NiftyGrid\AutomaticGrid
+	 */
+	public function disableSorting() {
+		$this->enableSorting = false;
+		return $this;
+	}
+
+	/**
+	 * Disables default update row callback that updates row in the database.
+	 * 
+	 * @return \NiftyGrid\AutomaticGrid
+	 */
+	public function disableDefaultOnUpdateRowCallback() {
+		$this->defaultUpdateRowCallbackEnabled = false;
+		return $this;
+	}
+
+	/**
+	 * Disables default insert row callback that updates row in the database.
+	 * 
+	 * @return \NiftyGrid\AutomaticGrid
+	 */
+	public function disableDefaultOnInsertRowCallback() {
+		$this->defaultInsertRowCallbackEnabled = false;
+		return $this;
+	}
+
+	/**
+	 * Disables default delete row callback that deletes row from the database.
+	 * 
+	 * @return \NiftyGrid\AutomaticGrid
+	 */
+	public function disableDefaultOnDeleteRowCallback() {
+		$this->defaultDeleteRowCallbackEnabled = false;
+		return $this;
 	}
 
 }

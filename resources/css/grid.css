@@ -121,7 +121,7 @@ form.grid-gridForm {
     background-color: #2fa4e7;
 }
 
-.grid .grid-filter-form input[type="text"]{
+.grid .grid-filter-form input[type="text"], .grid .grid-edited-cell input[type="text"].grid-editable{
     width:100%;
     color:#000;
     background-color:#FFF;
@@ -131,7 +131,7 @@ form.grid-gridForm {
     font-size:12px;
 }
 
-.grid .grid-filter-form select{
+.grid .grid-filter-form select, .grid .grid-edited-cell select.grid-editable{
     width:100%;
     border: 1px solid #ccc;
     height:24px;
@@ -202,26 +202,10 @@ form.grid-gridForm {
 	background-color: #dedede;
 }
 
-.grid input[type="text"].grid-editable{
-    padding:0px;
-    height:25px;
-    width:100%;
-    background-color:#FFF;
-    border: 1px solid #ccc;
-    font-size:14px;
-}
-
 .grid input[type="submit"].grid-editable{
     height: 24px;
     width: 70px;
 	float: left;
-}
-
-.grid select.grid-editable{
-    width:100%;
-    height:25px;
-    border: 1px solid #ccc;
-    font-size:14px;
 }
 
 .grid .grid-edited-cell{
