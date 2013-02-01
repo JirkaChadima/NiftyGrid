@@ -21,6 +21,7 @@ class Column extends \Nette\Application\UI\PresenterComponent {
 	const DATE_ONLY = 'data-date-only';
 	const TIME_ONLY = 'data-date-time-only';
 	const DATE_TIME = 'data-datetime';
+	const YEAR_ONLY = 'data-year-only';
 
 	/** @var string */
 	public $name;
@@ -306,6 +307,11 @@ class Column extends \Nette\Application\UI\PresenterComponent {
 				$options['data-date-start-view'] = 1;
 				$options['data-date-format'] = 'hh:ii:ss';
 				break;
+			case self::YEAR_ONLY: // unusable until datetimepicker is hacked
+				//$options['data-date-min-view'] = 4;
+				$options['data-date-start-view'] = 4;
+				$options['data-date-format'] = 'yyyy';
+				break;
 			default:
 				$options['data-date-format'] = 'yyyy-mm-dd hh:ii:ss';
 				break;
@@ -412,6 +418,11 @@ class Column extends \Nette\Application\UI\PresenterComponent {
 				$options['data-date-max-view'] = 1;
 				$options['data-date-start-view'] = 1;
 				$options['data-date-format'] = 'hh:ii:ss';
+				break;
+			case self::YEAR_ONLY: // unusable until datetimepicker hack is done
+				//$options['data-date-min-view'] = 4;
+				$options['data-date-start-view'] = 4;
+				$options['data-date-format'] = 'yyyy';
 				break;
 			default:
 				$options['data-date-format'] = 'yyyy-mm-dd hh:ii:ss';

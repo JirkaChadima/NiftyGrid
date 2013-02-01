@@ -30,10 +30,40 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	const TYPE_DATE = 'd';
 	const TYPE_DATETIME = 'dt';
 	const TYPE_TIME = 'tt';
+	const TYPE_YEAR = 'y';
 	const TYPE_BINARY = 'bin';
 	const TYPE_ENUM = 'e';
 
 	private $types;
+	private $typeCache = array(
+		'TINYINT' => self::TYPE_BOOLEAN,
+		'SMALLINT' => self::TYPE_NUMERIC,
+		'MEDIUMINT' => self::TYPE_NUMERIC,
+		'INT' => self::TYPE_NUMERIC,
+		'BIGINT' => self::TYPE_NUMERIC,
+		'BIT' => self::TYPE_BOOLEAN,
+		'FLOAT' => self::TYPE_NUMERIC,
+		'DOUBLE' => self::TYPE_NUMERIC,
+		'DECIMAL' => self::TYPE_NUMERIC,
+		'CHAR' => self::TYPE_TEXT,
+		'VARCHAR' => self::TYPE_TEXT,
+		'TINYTEXT' => self::TYPE_TEXT,
+		'TEXT' => self::TYPE_LONGTEXT,
+		'MEDIUMTEXT' => self::TYPE_LONGTEXT,
+		'LONGTEXT' => self::TYPE_LONGTEXT,
+		'BINARY' => self::TYPE_BINARY,
+		'VARBINARY' => self::TYPE_BINARY,
+		'TINYBLOB' => self::TYPE_BINARY,
+		'BLOB' => self::TYPE_BINARY,
+		'MEDIUMBLOB' => self::TYPE_BINARY,
+		'LONGBLOB' => self::TYPE_BINARY,
+		'DATE' => self::TYPE_DATE,
+		'TIME' => self::TYPE_TIME,
+		'YEAR' => self::TYPE_YEAR,
+		'DATETIME' => self::TYPE_DATETIME,
+		'TIMESTAMP' => self::TYPE_DATETIME,
+		'ENUM' => self::TYPE_TEXT,
+	);
 
 	/** @var \DibiFluent */
 	protected $fluentSource;
@@ -180,6 +210,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		$cacheResult = $this->cacheResult;
 
 		$columns = $cacheResult->getInfo()->getColumns();
+
 		foreach ($columns as $column) {
 			$colOptions = (!empty($this->columnOptions[$column->getName()]) ? $this->columnOptions[$column->getName()] : array());
 			if (!empty($colOptions[self::ALIAS])) {
@@ -209,10 +240,17 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 								}
 								return $row[$colName];
 							});
-				} elseif ($this->getColumnType($column) === self::TYPE_DATE || $this->getColumnType($column) === \Dibi::DATE) {
+				} elseif ($this->getColumnType($column) === self::TYPE_DATE) {
 					$col->setRenderer(function ($row) use($colName) {
 								if ($row[$colName] instanceof \DateTime) {
 									return $row[$colName]->format('Y-m-d');
+								}
+								return $row[$colName];
+							});
+				} elseif ($this->getColumnType($column) === self::TYPE_YEAR) {
+					$col->setRenderer(function ($row) use($colName) {
+								if ($row[$colName] instanceof \DateTime) {
+									return $row[$colName]->format('Y');
 								}
 								return $row[$colName];
 							});
@@ -274,7 +312,6 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 			$col = $components[$column->getName()];
 			switch ($this->getColumnType($column)) {
 				case self::TYPE_BOOLEAN: # boolean
-				case \Dibi::BOOL: # boolean
 					$col->setBooleanEditable();
 					break;
 				case self::TYPE_LONGTEXT: # longtext
@@ -282,9 +319,6 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 					break;
 				case self::TYPE_TEXT: # text
 				case self::TYPE_NUMERIC: # text
-				case \Dibi::TEXT: # text
-				case \Dibi::INTEGER: # numbers
-				case \Dibi::FLOAT: # numbers
 					$col->setTextEditable();
 					break;
 				case self::TYPE_ENUM: # enum
@@ -294,19 +328,18 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 					}
 					break;
 				case self::TYPE_DATETIME: # datetime
-				case \Dibi::DATETIME: # datetime
 					$col->setDatetimeEditable(Components\Column::DATE_TIME);
 					break;
 				case self::TYPE_DATE: # date
-				case \Dibi::DATE: # date
 					$col->setDatetimeEditable(Components\Column::DATE_ONLY);
 					break;
 				case self::TYPE_TIME: # time
-				case \Dibi::TIME: # time
 					$col->setDatetimeEditable(Components\Column::TIME_ONLY);
 					break;
+				case self::TYPE_YEAR: # time
+					$col->setDatetimeEditable(Components\Column::YEAR_ONLY);
+					break;
 				case self::TYPE_BINARY: # nothing
-				case \Dibi::BINARY: # nothing
 			}
 		}
 	}
@@ -332,12 +365,10 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 			$col = $components[$column->getName()];
 			switch ($this->getColumnType($column)) {
 				case self::TYPE_BOOLEAN: # boolean
-				case \Dibi::BOOL: # boolean
 					$col->setBooleanFilter();
 					break;
 				case self::TYPE_TEXT: # text
 				case self::TYPE_LONGTEXT: # nothing
-				case \Dibi::TEXT: # text
 					$col->setTextFilter();
 					$colOptions = (!empty($this->columnOptions[$column->getName()]) ? $this->columnOptions[$column->getName()] : array() );
 					if (!empty($colOptions[self::AUTOCOMPLETE])) {
@@ -349,8 +380,6 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 					}
 					break;
 				case self::TYPE_NUMERIC: # numbers
-				case \Dibi::INTEGER: #numbers
-				case \Dibi::FLOAT: # numbers
 					$col->setNumericFilter();
 					break;
 				case self::TYPE_ENUM: # enum
@@ -360,18 +389,17 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 					}
 					break;
 				case self::TYPE_DATETIME: # datetime
-				case \Dibi::DATETIME: # datetime
 					$col->setDatetimeFilter(Components\Column::DATE_TIME);
 					break;
 				case self::TYPE_DATE: # date
-				case \Dibi::DATE: # date
 					$col->setDatetimeFilter(Components\Column::DATE_ONLY);
 					break;
-				case \Dibi::TIME: # time
 				case self::TYPE_TIME: # time
 					$col->setDatetimeFilter(Components\Column::TIME_ONLY);
 					break;
-				case \Dibi::BINARY: # nothing
+				case self::TYPE_YEAR: # time
+					$col->setDatetimeFilter(Components\Column::YEAR_ONLY);
+					break;
 				case self::TYPE_BINARY: # nothing
 			}
 		}
@@ -521,7 +549,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 				in_array($this->columnOptions[$column->getName()][self::TYPE], $this->types)) {
 			return $this->columnOptions[$column->getName()][self::TYPE];
 		} else {
-			return $column->getType();
+			return $this->typeCache[strtoupper($column->getNativeType())];
 		}
 	}
 
