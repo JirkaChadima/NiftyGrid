@@ -35,6 +35,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	const TYPE_ENUM = 'e';
 
 	private $types;
+	// native mysql types to 
 	private $typeCache = array(
 		'TINYINT' => self::TYPE_BOOLEAN,
 		'SMALLINT' => self::TYPE_NUMERIC,
@@ -156,17 +157,18 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	 */
 	protected $defaultOrderBy;
 
-	/**
-	 * Default settings: show all columns, none are filterable, none are editable
-	 * 
-	 * @param \DibiFluent $fluent
-	 * @param array $columnOptions
-	 */
-	public function __construct(\DibiFluent $fluent, array $columnOptions = array(), $actionOptions = array(), $globalButtonOptions = array()) {
+	/** @var array */
+	protected $rowButtonOptions;
+	
+	// ajax, css class, confirmationdialog, label, link, target, text, name (=key)
+	
+	
+	public function __construct(\DibiFluent $fluent, array $columnOptions = array(), $rowButtonOptions = array(), $globalButtonOptions = array()) {
 		parent::__construct();
 		$this->fluentSource = $fluent;
 		$this->types = array(self::TYPE_NUMERIC, self::TYPE_TEXT, self::TYPE_LONGTEXT, self::TYPE_BOOLEAN, self::TYPE_DATE, self::TYPE_DATETIME, self::TYPE_TIME, self::TYPE_BINARY, self::TYPE_ENUM);
 		$this->columnOptions = $columnOptions;
+		$this->rowButtonOptions = $rowButtonOptions;
 
 		// set key and orderBy
 		if (empty($columnOptions)) {
@@ -280,8 +282,14 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 				$this->setRowFormCallback(callback($this, 'handleUpdateRow'));
 			}
 		}
-		// ++ custom actions
-		// ++ custom global buttons
+
+		if (count($this->rowButtonOptions)) {
+			foreach($this->rowButtonOptions as $name => $options) {
+				
+			}
+		}
+
+// ++ custom global buttons
 	}
 
 	/**
