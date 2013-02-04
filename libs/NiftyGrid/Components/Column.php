@@ -397,6 +397,13 @@ class Column extends \Nette\Application\UI\PresenterComponent {
 	}
 
 	/**
+	 * @deprecated
+	 */
+	public function setDateFilter() {
+		return $this->setDatetimeFilter(self::DATE_TIME);
+	}
+	
+	/**
 	 * @return Column
 	 */
 	public function setDatetimeFilter($type) {

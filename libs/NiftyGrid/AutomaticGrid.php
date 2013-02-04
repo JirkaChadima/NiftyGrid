@@ -708,3 +708,11 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 
 }
 
+
+/**
+ * @deprecated, only for backwards compatibility
+ */
+ class DibiFluentDataSource extends \NiftyGrid\DataSource\DibiFluentDataSource {}
+ class NDataSource extends \NiftyGrid\DataSource\NDataSource {}
+ class DoctrineDataSource extends \NiftyGrid\DataSource\DoctrineDataSource {}
+ 
