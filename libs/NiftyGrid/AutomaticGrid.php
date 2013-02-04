@@ -8,19 +8,19 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	const DEFAULT_AUTOCOMPLETE_LIST_LENGTH = 10;
 
 	// column options keys
-	const KEY = 'key';
-	const ORDER = 'order';
-	const ORDER_DESC = 'order_desc';
-	const ORDER_ASC = 'order_asc';
-	const EDITABLE = 'editable';
-	const FILTERABLE = 'filterable';
-	const AUTOCOMPLETE = 'autocomplete';
-	const AUTOCOMPLETE_LENGTH = 'autocomplete_length';
-	const RENDERER = 'renderer';
-	const TABLENAME = 'tablename';
-	const ALIAS = 'alias';
-	const TYPE = 'type';
-	const ENUM = 'enum';
+	const KEY = 'c.key';
+	const ORDER = 'c.order';
+	const ORDER_DESC = 'c.order_desc';
+	const ORDER_ASC = 'c.order_asc';
+	const EDITABLE = 'c.editable';
+	const FILTERABLE = 'c.filterable';
+	const AUTOCOMPLETE = 'c.autocomplete';
+	const AUTOCOMPLETE_LENGTH = 'c.autocomplete_length';
+	const RENDERER = 'c.renderer';
+	const TABLENAME = 'c.tablename';
+	const ALIAS = 'c.alias';
+	const TYPE = 'c.type';
+	const ENUM = 'c.enum';
 
 	// types
 	const TYPE_NUMERIC = 'i';
@@ -150,9 +150,13 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	/** @var array */
 	protected $rowButtonOptions;
 
-	
-	
-	// ajax, css class, confirmationdialog, label, link, target, text, name (=key)
+	const AJAX = 'r.ajax';
+	const CSS_CLASS = 'r.class';
+	const CONFIRMATION_DIALOG = 'r.confirmation';
+	const LABEL = 'r.label';
+	const LINK = 'r.link';
+	const TARGET = 'r.target';
+	const TEXT = 'r.text';
 
 	/** @var array */
 	protected $globalButtonOptions;
@@ -196,7 +200,6 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		$this->setMessageNoRecords(_('No records'));
 
 		$columns = $this->dataSource->getColumns();
-
 		foreach ($columns as $column) {
 			$colOptions = (!empty($this->columnOptions[$column->getName()]) ? $this->columnOptions[$column->getName()] : array());
 			if (!empty($colOptions[self::ALIAS])) {
@@ -246,8 +249,9 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		$this->makeEditableColumns($columns, $this['columns']->components);
 		$this->makeFilterableColumns($columns, $this['columns']->components);
 
+		$self = $this;
+		// row actions
 		if ($this->removable) {
-			$self = $this;
 			$this->addButton('remove')
 					->setLabel(_('Remove row'))
 					->setClass('inline-remove')
@@ -259,6 +263,70 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 							});
 		}
 
+		if (count($this->rowButtonOptions)) {
+			foreach ($this->rowButtonOptions as $name => $options) {
+				$button = $this->addButton($name);
+				if (!empty($options[self::LABEL])) {
+					if (is_callable($options[self::LABEL])) {
+						$button->setLabel(function ($row) use ($self, $options) {
+									return call_user_func($options[$self::LABEL], $row, $self);
+								});
+					} else {
+						$button->setLabel($options[self::LABEL]);
+					}
+				}
+				if (!empty($options[self::CSS_CLASS])) {
+					if (is_callable($options[self::CSS_CLASS])) {
+						$button->setClass(function ($row) use ($self, $options) {
+									return call_user_func($options[$self::CSS_CLASS], $row, $self);
+								});
+					} else {
+						$button->setClass($options[self::CSS_CLASS]);
+					}
+				}
+				if (!empty($options[self::LINK])) {
+					if (is_callable($options[self::LINK])) {
+						$button->setLink(function ($row) use ($self, $options) {
+									return call_user_func($options[$self::LINK], $row, $self);
+								});
+					} else {
+						$button->setLink($options[self::LINK]);
+					}
+				}
+				if (!empty($options[self::CONFIRMATION_DIALOG])) {
+					if (is_callable($options[self::CONFIRMATION_DIALOG])) {
+						$button->setConfirmationDialog(function ($row) use ($self, $options) {
+									return call_user_func($options[$self::CONFIRMATION_DIALOG], $row, $self);
+								});
+					} else {
+						$button->setConfirmationDialog($options[self::CONFIRMATION_DIALOG]);
+					}
+				}
+				if (!empty($options[self::AJAX])) {
+					$button->setAjax($options[self::AJAX]);
+				}
+				if (!empty($options[self::TARGET])) {
+					if (is_callable($options[self::TARGET])) {
+						$button->setTarget(function ($row) use ($self, $options) {
+									return call_user_func($options[$self::TARGET], $row, $self);
+								});
+					} else {
+						$button->setTarget($options[self::TARGET]);
+					}
+				}
+				if (!empty($options[self::TEXT])) {
+					if (is_callable($options[self::TEXT])) {
+						$button->setText(function ($row) use ($self, $options) {
+									return call_user_func($options[$self::TEXT], $row, $self);
+								});
+					} else {
+						$button->setText($options[self::TEXT]);
+					}
+				}
+			}
+		}
+
+		// global buttons
 		if ($this->creatable) {
 			$this->addGlobalButton(Grid::ADD_ROW, _('Add row'))
 					->setClass('inline-add btn-success');
@@ -266,14 +334,6 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 				$this->setRowFormCallback(callback($this, 'handleUpdateRow'));
 			}
 		}
-
-		if (count($this->rowButtonOptions)) {
-			foreach ($this->rowButtonOptions as $name => $options) {
-				
-			}
-		}
-
-// ++ custom global buttons
 	}
 
 	/**
