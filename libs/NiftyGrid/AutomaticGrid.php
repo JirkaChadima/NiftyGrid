@@ -334,6 +334,30 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 				$this->setRowFormCallback(callback($this, 'handleUpdateRow'));
 			}
 		}
+
+		if (count($this->globalButtonOptions)) {
+			foreach ($this->globalButtonOptions as $name => $options) {
+				$button = $this->addGlobalButton($name);
+				if (!empty($options[self::AJAX])) {
+					$button->setAjax($options[self::AJAX]);
+				}
+				if (!empty($options[self::LABEL])) {
+					$button->setLabel($options[self::LABEL]);
+				}
+				if (!empty($options[self::CSS_CLASS])) {
+					$button->setClass($options[self::CSS_CLASS]);
+				}
+				if (!empty($options[self::LINK])) {
+					if (is_callable($options[self::LINK])) {
+						$button->setLink(function ($row) use ($self, $options) {
+									return call_user_func($options[$self::LINK], $row, $self);
+								});
+					} else {
+						$button->setLink($options[self::LINK]);
+					}
+				}
+			}
+		}
 	}
 
 	/**
