@@ -88,22 +88,20 @@ $(function(){
 		var gridName = $(this).data("gridname");
 		var column = $(this).data("column");
 		var link = $(this).data("link");
-		$(this).autocomplete({
-			source: function(request, response) {
+		$(this).typeahead({
+			source: function (query, process) {
 				$.ajax({
 					url: link,
-					data: gridName+'-term='+request.term+'&'+gridName+'-column='+column,
-					dataType: "json",
-					method: "post",
-					success: function(data) {
-						response(data.payload);
+					data: gridName+'-term='+query+'&'+gridName+'-column='+column,
+					dataType: 'json',
+					method: 'post',
+					success: function (data) {
+						return process(data.payload);
 					}
 				});
 			},
-			delay: 100,
-			open: function() {
-				$('.ui-menu').width($(this).width())
-				}
+			items: 15,
+			minLength: 2
 		});
 	});
 
@@ -123,7 +121,8 @@ $(function(){
 
 		$(".grid-datetimepicker").each(function(){
 			$(this).datetimepicker({
-				keyboardNavigation: false
+				keyboardNavigation: false,
+				startDate: '1900-01-01'
 			});
 		});
 	}

@@ -48,6 +48,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		'DECIMAL' => self::TYPE_NUMERIC,
 		'CHAR' => self::TYPE_TEXT,
 		'VARCHAR' => self::TYPE_TEXT,
+		'STRING' => self::TYPE_TEXT,
 		'TINYTEXT' => self::TYPE_TEXT,
 		'TEXT' => self::TYPE_LONGTEXT,
 		'MEDIUMTEXT' => self::TYPE_LONGTEXT,
