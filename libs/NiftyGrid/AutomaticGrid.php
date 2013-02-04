@@ -66,10 +66,6 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		'TIMESTAMP' => self::TYPE_DATETIME,
 		'ENUM' => self::TYPE_TEXT,
 	);
-
-	/** @var \DibiFluent */
-	protected $fluentSource;
-	protected $cacheResult;
 	// grid options
 	/**
 	 * Is allowed editing
@@ -145,13 +141,6 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	protected $columnOptions = array();
 
 	/**
-	 * Primary key column name, without it the grid cannot be shown. If none is
-	 * specified in columnOptions, id is automatically chosen.
-	 * @var string
-	 */
-	protected $keyColumn;
-
-	/**
 	 * Default order by clause. If none is specified in columnOptions,
 	 * id is automatically chosen.
 	 * @var string
@@ -160,31 +149,27 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 
 	/** @var array */
 	protected $rowButtonOptions;
+
+	
 	
 	// ajax, css class, confirmationdialog, label, link, target, text, name (=key)
-	
+
 	/** @var array */
 	protected $globalButtonOptions;
-	
-	
-	public function __construct(\DibiFluent $fluent, array $columnOptions = array(), $rowButtonOptions = array(), $globalButtonOptions = array()) {
+
+	public function __construct(\NiftyGrid\DataSource\IDataSource $source, array $columnOptions = array(), $rowButtonOptions = array(), $globalButtonOptions = array()) {
 		parent::__construct();
-		$this->fluentSource = $fluent;
 		$this->types = array(self::TYPE_NUMERIC, self::TYPE_TEXT, self::TYPE_LONGTEXT, self::TYPE_BOOLEAN, self::TYPE_DATE, self::TYPE_DATETIME, self::TYPE_TIME, self::TYPE_BINARY, self::TYPE_ENUM);
 		$this->columnOptions = $columnOptions;
 		$this->rowButtonOptions = $rowButtonOptions;
 		$this->globalButtonOptions = $globalButtonOptions;
-
-		// set key and orderBy
+		$this->setDataSource($source);
+		// set orderBy
 		if (empty($columnOptions)) {
-			$this->keyColumn = 'id';
 			$this->defaultOrderBy = 'id asc';
 			$this->autoMode = true;
 		} else {
 			foreach ($columnOptions as $col => $attrs) {
-				if (!empty($attrs[self::KEY])) {
-					$this->keyColumn = $col;
-				}
 				if (!empty($attrs[self::ORDER])) {
 					$this->defaultOrderBy = $col;
 					$this->defaultOrderBy .= ($attrs[self::ORDER_DESC] ? ' desc' : ' asc');
@@ -194,29 +179,23 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	}
 
 	/**
-	 * Tries to detect all columns in the datasource and adds them to grid.
+	 * Tries to detect all columns in the datasource and add them to grid.
 	 * To every column a tablename, alias and a renderer might be added.
 	 * 
 	 * Then all columns are made editable and filterable accordingly to the
 	 * column options or by automatic mode.
 	 * 
-	 * Finally, all actions are added.
+	 * Finally, all actions and global buttons are added.
 	 * 
 	 * @param \Nette\Application\UI\Presenter $presenter
-	 * @throws GridException
+	 * @throws \NiftyGrid\GridException
 	 */
 	protected function configure($presenter) {
-		if (empty($this->keyColumn)) {
-			throw new GridException('Missing key column!');
-		}
 		$this->template->setTranslator($presenter->getTranslator());
 		$this->setTranslator($presenter->getTranslator());
 		$this->setMessageNoRecords(_('No records'));
-		$this->setDataSource(new \NiftyGrid\DataSource\DibiFluentDataSource($this->fluentSource, $this->keyColumn));
-		$this->cacheResult = $this->fluentSource->limit(1)->execute();
-		$cacheResult = $this->cacheResult;
 
-		$columns = $cacheResult->getInfo()->getColumns();
+		$columns = $this->dataSource->getColumns();
 
 		foreach ($columns as $column) {
 			$colOptions = (!empty($this->columnOptions[$column->getName()]) ? $this->columnOptions[$column->getName()] : array());
@@ -273,7 +252,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 					->setLabel(_('Remove row'))
 					->setClass('inline-remove')
 					->setLink(function($row) use ($self) {
-								return $self->link("removeRow!", array('primaryKey' => $row[$self->getKeyColumn()]));
+								return $self->link("removeRow!", array('primaryKey' => $row[$self->getDataSource()->getPrimaryKey()]));
 							})
 					->setConfirmationDialog(function($row) {
 								return _("Are you sure? This row will be deleted forever!");
@@ -289,7 +268,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		}
 
 		if (count($this->rowButtonOptions)) {
-			foreach($this->rowButtonOptions as $name => $options) {
+			foreach ($this->rowButtonOptions as $name => $options) {
 				
 			}
 		}
@@ -301,11 +280,11 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	 * If the grid is globally editable and no column options are set, 
 	 * all columns except the primary key column are set to be editable.
 	 * The editing type is decided by the column type that is either specified
-	 * manually or detected by Dibi.
+	 * manually or detected in the DataSource.
 	 * 
 	 * Supported edit modes: boolean, long text, text, date and select/enum.
 	 * 
-	 * @param array of DibiColumnInfo $columns
+	 * @param array of \NiftyGrid\DataSource\IColumnInfo $columns
 	 * @param array of \Nette\Application\UI\PresenterComponent $components
 	 */
 	private function makeEditableColumns($columns, $components) {
@@ -319,7 +298,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		}
 
 		foreach ($columns as $column) {
-			if ($column->getName() === $this->keyColumn || (!$this->autoMode && empty($this->columnOptions[$column->getName()])) || (!$this->autoMode && empty($this->columnOptions[$column->getName()][self::EDITABLE])) || empty($components[$column->getName()])) {
+			if ($column->getName() === $this->dataSource->getPrimaryKey() || (!$this->autoMode && empty($this->columnOptions[$column->getName()])) || (!$this->autoMode && empty($this->columnOptions[$column->getName()][self::EDITABLE])) || empty($components[$column->getName()])) {
 				continue;
 			}
 			$col = $components[$column->getName()];
@@ -360,11 +339,11 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	/**
 	 * If the grid is globally filterable and no column options are set,
 	 * all columns are made filterable. The filter type is set either manually
-	 * in columns config or detected automatically by Dibi.
+	 * in columns config or detected in the DataSource.
 	 * 
-	 * Supported filter types are boolean, text, numericx, date and select/enum.
+	 * Supported filter types are boolean, text, numeric, date and select/enum.
 	 * 
-	 * @param array of DibiColumnInfo $columns
+	 * @param array of \NiftyGrid\DataSource\IColumnInfo $columns
 	 * @param array of \Nette\Application\UI\PresenterComponent $components
 	 */
 	private function makeFilterableColumns($columns, $components) {
@@ -418,12 +397,16 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		}
 	}
 
+	/**
+	 * Dispatcher for both insert and update row.
+	 * 
+	 * If a $primaryKey field is present in $values, it is considered as an
+	 * update. Insert is processed otherwise.
+	 * 
+	 * @param array $values
+	 */
 	public function handleUpdateRow($values) {
-		if (!$this->keyColumn) {
-			throw new \NiftyGrid\UnknownColumnException('Key column is not set!');
-		}
-
-		if (!empty($values[$this->keyColumn])) { // if there is a key, it is probably an update
+		if (!empty($values[$this->dataSource->getPrimaryKey()])) { // if there is a key, it is probably an update
 			if (!$this->editable) {
 				return;
 			}
@@ -444,39 +427,35 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 
 	/**
 	 * If the default udpate row callback is allowed, it tries to set the values
-	 * in the row with passed $primeryKey field
+	 * in the row with passed $primaryKey field
 	 * 
 	 * @param array $values
 	 * @throws \NiftyGrid\UnknownColumnException
 	 */
 	private function defaultUpdateRowCallback($values) {
 		if ($this->defaultUpdateRowCallbackEnabled) {
-			$columns = $this->cacheResult->getColumns();
+			$columns = $this->dataSource->getColumns();
 			$table = $columns[0]->getTableName();
 
-			if (!$values[$this->keyColumn]) {
+			if (!$values[$this->dataSource->getPrimaryKey()]) {
 				throw new \NiftyGrid\UnknownColumnException('Key column not found!');
 			}
 
-			$id = $values[$this->keyColumn];
-			unset($values[$this->keyColumn]);
+			$id = $values[$this->dataSource->getPrimaryKey()];
+			unset($values[$this->dataSource->getPrimaryKey()]);
 
 			foreach ($values as $colname => $val) {
-				$tableName = $this['columns']->components[$colname]->tableName;
-				if (!empty($this['columns']->components[$colname]) && !empty($tableName)) {
-					$values[$tableName] = $val;
+				$fullTableName = $this['columns']->components[$colname]->tableName;
+				if (!empty($this['columns']->components[$colname]) && !empty($fullTableName)) {
+					$values[$fullTableName] = $val;
 					unset($values[$colname]);
 				}
 			}
 
 			try {
-				$this->fluentSource
-						->getConnection()
-						->update($table, $values)
-						->where('%n = %i', $this->keyColumn, $id)
-						->execute();
+				$this->dataSource->update($table, $values, $id);
 				$this->flashMessage(_('Row was updated.'), 'alert alert-success');
-			} catch (\DibiDriverException $e) {
+			} catch (\NiftyGrid\DataSource\DataSourceException $e) {
 				$this->flashMessage(_('There was an error during the communication with the database: ' . $e->getMessage()), 'alert alert-error');
 			}
 		}
@@ -490,23 +469,20 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	 */
 	private function defaultInsertRowCallback($values) {
 		if ($this->defaultInsertRowCallbackEnabled) {
-			$columns = $this->cacheResult->getColumns();
+			$columns = $this->dataSource->getColumns();
 			$table = $columns[0]->getTableName();
 
 			foreach ($values as $colname => $val) {
-				$tableName = $this['columns']->components[$colname]->tableName;
-				if (!empty($this['columns']->components[$colname]) && !empty($tableName)) {
-					$values[$tableName] = $val;
+				$fullTableName = $this['columns']->components[$colname]->tableName;
+				if (!empty($this['columns']->components[$colname]) && !empty($fullTableName)) {
+					$values[$fullTableName] = $val;
 					unset($values[$colname]);
 				}
 			}
 			try {
-				$this->fluentSource
-						->getConnection()
-						->insert($table, $values)
-						->execute();
+				$this->dataSource->insert($table, $values);
 				$this->flashMessage(_('Row was inserted.'), 'alert alert-success');
-			} catch (\DibiDriverException $e) {
+			} catch (\NiftyGrid\DataSource\DataSourceException $e) {
 				$this->flashMessage(_('There was an error during the communication with the database: ' . $e->getMessage()), 'alert alert-error');
 			}
 		}
@@ -526,21 +502,13 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 			return;
 		}
 		if ($this->defaultDeleteRowCallbackEnabled) {
-			$columns = $this->cacheResult->getColumns();
+			$columns = $this->dataSource->getColumns();
 			$table = $columns[0]->getTableName();
 
-			if (!$this->keyColumn) {
-				throw new \NiftyGrid\UnknownColumnException('Key column not set!');
-			}
-
 			try {
-				$this->fluentSource
-						->getConnection()
-						->delete($table)
-						->where('%n = %i', $this->keyColumn, $primaryKey)
-						->execute();
+				$this->dataSource->delete($table, $primaryKey);
 				$this->flashMessage(_('Row was removed.'), 'alert alert-success');
-			} catch (\DibiDriverException $e) {
+			} catch (\NiftyGrid\DataSource\DataSourceException $e) {
 				$this->flashMessage(_('There was an error during the communication with the database: ' . $e->getMessage()), 'alert alert-error');
 			}
 		}
@@ -553,7 +521,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	/**
 	 * Detects column type either from the options or from the DibiColumnInfo
 	 * 
-	 * @param \DibiColumnInfo $column
+	 * @param \NiftyGrid\DataSource\IColumnInfo $column
 	 * @return string column type
 	 */
 	private function getColumnType($column) {
@@ -568,10 +536,10 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 
 	/**
 	 * Getter for $keyColumn attribute
-	 * @return string
+	 * @return \NiftyGrid\DataSource\IDataSource
 	 */
-	public function getKeyColumn() {
-		return $this->keyColumn;
+	public function getDataSource() {
+		return $this->dataSource;
 	}
 
 	/**

@@ -45,6 +45,15 @@ interface IDataSource
 	 * @param int $offset
 	 */
 	public function limitData($limit, $offset);
+	
+	/**
+	 * Array of IColumnInfo that holds information about all columns.
+	 */
+	public function getColumns();
+	
+	public function update($table, array $data, $primaryKeyValue);
+	public function insert($table, array $data);
+	public function delete($table, $primaryKeyValue);
 
 	/**
 	 * Filter data by $filters
@@ -80,3 +89,5 @@ interface IDataSource
 	 */
 	public function filterData(array $filters);
 }
+
+class DataSourceException extends \Exception {}

@@ -159,4 +159,20 @@ class DoctrineDataSource implements IDataSource {
 		return $entity . "." . implode("_", $name);
 	}
 
+	public function delete($table, $primaryKeyValue) {
+		throw new \Nette\NotImplementedException();
+	}
+
+	public function getColumns() {
+		throw new \Nette\NotImplementedException();
+	}
+
+	public function insert($table, array $data) {
+		throw new \Nette\NotImplementedException();
+	}
+
+	public function update($table, array $data, $primaryKeyValue) {
+		throw new \Nette\NotImplementedException();
+	}
+
 }
