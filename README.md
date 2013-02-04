@@ -13,7 +13,7 @@ $fluent = $dibi
 $source = new \NiftyGrid\DataSource\DibiFluentDataSource($fluent, 'id');
 $grid = new \NiftyGrid\AutomaticGrid(
 	$source,
-	array(
+	array( // column definition
 			'id' => array(
 				NiftyGrid\AutomaticGrid::KEY => true,
 				NiftyGrid\AutomaticGrid::ORDER => true,
@@ -43,5 +43,32 @@ $grid = new \NiftyGrid\AutomaticGrid(
 				NiftyGrid\AutomaticGrid::FILTERABLE => true,
 			),
 		),
-);
+	),
+	array( // row action definition
+		'mybutton' => array(
+			NiftyGrid\AutomaticGrid::CONFIRMATION_DIALOG => function ($row, $grid) {return 'This is row ID ' . $row['id'];},
+			NiftyGrid\AutomaticGrid::LABEL => 'Cool button's label',
+			NiftyGrid\AutomaticGrid::TEXT => 'Cool button text',
+		)
+	),
+	array( // global buttons definition
+		'myglobalbutton' => array(
+			NiftyGrid\AutomaticGrid::LABEL => 'Cool button's label',
+			NiftyGrid\AutomaticGrid::TEXT => 'Cool button text',
+		)
+	)
+;
+
+$grid->enableEditing() // by default editing is turned off
+		->enableFiltering() // by default filtering is turned off
+		->enableRemoving() // by default removing is turned off
+		->enableAdding(); // by default adding is turned off
+
+```
+
+... or you could be brave and let the grid decide...
+
+```php
+$source = new \NiftyGrid\DataSource\DibiFluentDataSource($fluent, 'id');
+$grid = new \NiftyGrid\AutomaticGrid($source);
 ```
