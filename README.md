@@ -3,6 +3,8 @@ NiftyGrid/Automatic
 
 This fork brings an AutomaticGrid class to the NiftyGrid package.
 
+**WARNING** - I had to extend the ``IDataSource`` interface!
+
 Usage
 -----
 
@@ -47,14 +49,14 @@ $grid = new \NiftyGrid\AutomaticGrid(
 	array( // row action definition
 		'mybutton' => array(
 			NiftyGrid\AutomaticGrid::CONFIRMATION_DIALOG => function ($row, $grid) {return 'This is row ID ' . $row['id'];},
-			NiftyGrid\AutomaticGrid::LABEL => 'Cool button's label',
-			NiftyGrid\AutomaticGrid::TEXT => 'Cool button text',
+			NiftyGrid\AutomaticGrid::LABEL => "Cool button's label",
+			NiftyGrid\AutomaticGrid::TEXT => "Cool button text",
 		)
 	),
 	array( // global buttons definition
 		'myglobalbutton' => array(
-			NiftyGrid\AutomaticGrid::LABEL => 'Cool button's label',
-			NiftyGrid\AutomaticGrid::TEXT => 'Cool button text',
+			NiftyGrid\AutomaticGrid::LABEL => "Cool button's label",
+			NiftyGrid\AutomaticGrid::TEXT => "Cool button text",
 		)
 	)
 ;
