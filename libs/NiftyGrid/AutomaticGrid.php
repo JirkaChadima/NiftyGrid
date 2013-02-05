@@ -17,7 +17,9 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	const AUTOCOMPLETE = 'c.autocomplete';
 	const AUTOCOMPLETE_LENGTH = 'c.autocomplete_length';
 	const RENDERER = 'c.renderer';
+	const DISABLED = 'c.disabled';
 	const TABLENAME = 'c.tablename';
+	const WIDTH = 'c.width';
 	const ALIAS = 'c.alias';
 	const TYPE = 'c.type';
 	const ENUM = 'c.enum';
@@ -176,7 +178,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 			foreach ($columnOptions as $col => $attrs) {
 				if (!empty($attrs[self::ORDER])) {
 					$this->defaultOrderBy = $col;
-					$this->defaultOrderBy .= ($attrs[self::ORDER_DESC] ? ' desc' : ' asc');
+					$this->defaultOrderBy .= (!empty($attrs[self::ORDER_DESC]) ? ' desc' : ' asc');
 				}
 			}
 		}
@@ -198,21 +200,31 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		$this->template->setTranslator($presenter->getTranslator());
 		$this->setTranslator($presenter->getTranslator());
 		$this->setMessageNoRecords(_('No records'));
+		$this->setDefaultOrder($this->defaultOrderBy);
 
 		$columns = $this->dataSource->getColumns();
 		foreach ($columns as $column) {
 			$colOptions = (!empty($this->columnOptions[$column->getName()]) ? $this->columnOptions[$column->getName()] : array());
+			
+			if (!empty($colOptions[self::DISABLED])) {
+				continue;
+			}
+			
 			if (!empty($colOptions[self::ALIAS])) {
 				$name = $colOptions[self::ALIAS];
 			} else {
 				$name = \Nette\Utils\Strings::firstUpper($column->getName());
 			}
-
+			
 			$colName = $column->getName();
 			$col = $this->addColumn($colName, $name);
 
+			if (!empty($colOptions[self::WIDTH])) {
+				$col->setWidth($colOptions[self::WIDTH]);
+			}
+			
 			if (!empty($colOptions[self::TABLENAME])) {
-				$col->setTableName($colOptions[self::TABLENAME] . '.' . $colName);
+				$col->setTableName($colOptions[self::TABLENAME]);
 			}
 
 			if (!empty($colOptions[self::RENDERER])) {
@@ -302,7 +314,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 						$button->setConfirmationDialog($options[self::CONFIRMATION_DIALOG]);
 					}
 				}
-				if (!empty($options[self::AJAX])) {
+				if (isset($options[self::AJAX])) {
 					$button->setAjax($options[self::AJAX]);
 				}
 				if (!empty($options[self::TARGET])) {
@@ -338,7 +350,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		if (count($this->globalButtonOptions)) {
 			foreach ($this->globalButtonOptions as $name => $options) {
 				$button = $this->addGlobalButton($name);
-				if (!empty($options[self::AJAX])) {
+				if (isset($options[self::AJAX])) {
 					$button->setAjax($options[self::AJAX]);
 				}
 				if (!empty($options[self::LABEL])) {
@@ -382,7 +394,11 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		}
 
 		foreach ($columns as $column) {
-			if ($column->getName() === $this->dataSource->getPrimaryKey() || (!$this->autoMode && empty($this->columnOptions[$column->getName()])) || (!$this->autoMode && empty($this->columnOptions[$column->getName()][self::EDITABLE])) || empty($components[$column->getName()])) {
+			if ($column->getName() === $this->dataSource->getPrimaryKey() ||
+					(!$this->autoMode && empty($this->columnOptions[$column->getName()])) ||
+					(!$this->autoMode && empty($this->columnOptions[$column->getName()][self::EDITABLE])) ||
+					(!$this->autoMode && !empty($this->columnOptions[$column->getName()][self::DISABLED]))||
+					empty($components[$column->getName()])) {
 				continue;
 			}
 			$col = $components[$column->getName()];
@@ -435,7 +451,10 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 			return;
 		}
 		foreach ($columns as $column) {
-			if (!$this->autoMode && empty($this->columnOptions[$column->getName()]) || (!$this->autoMode && empty($this->columnOptions[$column->getName()][self::FILTERABLE])) || empty($components[$column->getName()])) {
+			if ((!$this->autoMode && empty($this->columnOptions[$column->getName()])) ||
+				(!$this->autoMode && empty($this->columnOptions[$column->getName()][self::FILTERABLE])) ||
+				(!$this->autoMode && !empty($this->columnOptions[$column->getName()][self::DISABLED]))||
+				empty($components[$column->getName()])) {
 				continue;
 			}
 			$col = $components[$column->getName()];
@@ -707,7 +726,6 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	}
 
 }
-
 
 /**
  * @deprecated, only for backwards compatibility
