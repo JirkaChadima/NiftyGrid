@@ -109,12 +109,7 @@
 			</td>
 			<td n:foreach="$columns as $column" n:attr="class => array(grid-row-cell, grid-data-cell, $control->isEditable() && $control->activeRowForm == $row[$primaryKey] ? 'grid-edited-cell'), style => $column->hasCellRenderer() ? $column->getCellRenderer($row)">
 				{if $control->isEditable() && $column->editable && $control->activeRowForm == $row[$primaryKey]}
-					{if $column->datetimeType !== null}
-						{label $control['gridForm'][$control->name]['rowForm'][$column->name] /}
-						{input $control['gridForm'][$control->name]['rowForm'][$column->name], value => $column->prepareValue($row)}
-					{else}
-						{$control['gridForm'][$control->name]['rowForm'][$column->name]->getControl()}
-					{/if}
+					{$control['gridForm'][$control->name]['rowForm'][$column->name]->getControl()}
 				{else}
 					{$column->prepareValue($row)}
 				{/if}

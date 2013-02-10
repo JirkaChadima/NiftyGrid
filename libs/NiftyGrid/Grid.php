@@ -85,6 +85,9 @@ abstract class Grid extends \Nette\Application\UI\Control {
 	/** @var \Nette\Localization\ITranslator */
 	protected $translator = null;
 
+	/** @var boolean */
+	protected $showCurrentLink = FALSE;
+
 	function __construct() {
 		parent::__construct();
 

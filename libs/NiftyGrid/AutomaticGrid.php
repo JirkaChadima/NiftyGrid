@@ -172,13 +172,13 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		$this->setDataSource($source);
 		// set orderBy
 		if (empty($columnOptions)) {
-			$this->defaultOrderBy = 'id asc';
+			$this->defaultOrderBy = 'id ASC';
 			$this->autoMode = true;
 		} else {
 			foreach ($columnOptions as $col => $attrs) {
 				if (!empty($attrs[self::ORDER])) {
 					$this->defaultOrderBy = $col;
-					$this->defaultOrderBy .= (!empty($attrs[self::ORDER_DESC]) ? ' desc' : ' asc');
+					$this->defaultOrderBy .= (!empty($attrs[self::ORDER_DESC]) ? ' DESC' : ' ASC');
 				}
 			}
 		}
@@ -218,6 +218,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 			
 			$colName = $column->getName();
 			$col = $this->addColumn($colName, $name);
+
 
 			if (!empty($colOptions[self::WIDTH])) {
 				$col->setWidth($colOptions[self::WIDTH]);

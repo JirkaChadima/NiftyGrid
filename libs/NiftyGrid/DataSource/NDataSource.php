@@ -64,19 +64,23 @@ class NDataSource implements IDataSource {
 	}
 
 	public function delete($table, $primaryKeyValue) {
-		throw new \Nette\NotImplementedException();
+		return $this->table->get($primaryKeyValue)->delete();
 	}
 
 	public function getColumns() {
-		throw new \Nette\NotImplementedException();
+		$result = array();
+		foreach($this->table->getConnection()->getSupplementalDriver()->getColumns($this->table->getName()) as $col) {
+			$result[] = new NColumnInfo($col);
+		}
+		return $result;
 	}
 
 	public function insert($table, array $data) {
-		throw new \Nette\NotImplementedException();
+		return $this->table->insert($data);
 	}
 
 	public function update($table, array $data, $primaryKeyValue) {
-		throw new \Nette\NotImplementedException();
+		return $this->table->get($primaryKeyValue)->update($data);
 	}
 
 }

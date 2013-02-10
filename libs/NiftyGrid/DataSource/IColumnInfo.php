@@ -1,5 +1,7 @@
 <?php
 
+namespace NiftyGrid\DataSource;
+
 /**
  *
  * @author JT8100803
