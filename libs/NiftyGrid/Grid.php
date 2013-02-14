@@ -661,7 +661,7 @@ abstract class Grid extends \Nette\Application\UI\Control {
 	public function handleAutocomplete($column, $term) {
 		if ($this->presenter->isAjax()) {
 			if (!empty($this['columns']->components[$column]) && $this['columns']->components[$column]->autocomplete) {
-				$this->filter[$column] = $term . "%";
+				$this->filter[$column] = $term;
 				$this->filterData();
 				$this->dataSource->limitData($this['columns']->components[$column]->getAutocompleteResults(), NULL);
 				$data = $this->dataSource->getData();
