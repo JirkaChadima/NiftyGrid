@@ -40,9 +40,11 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	// native mysql types to 
 	private $typeCache = array(
 		'TINYINT' => self::TYPE_BOOLEAN,
+		'BOOL' => self::TYPE_BOOLEAN,
 		'SMALLINT' => self::TYPE_NUMERIC,
 		'MEDIUMINT' => self::TYPE_NUMERIC,
 		'INT' => self::TYPE_NUMERIC,
+		'INT4' => self::TYPE_NUMERIC,
 		'BIGINT' => self::TYPE_NUMERIC,
 		'BIT' => self::TYPE_BOOLEAN,
 		'FLOAT' => self::TYPE_NUMERIC,
@@ -255,6 +257,18 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 									return $row[$colName]->format('Y');
 								}
 								return $row[$colName];
+							});
+				} elseif ($this->getColumnType($column) === self::TYPE_BOOLEAN) {
+					$col->setRenderer(function ($row) use($colName) {
+								if (!$row[$colName]) {
+									return \Nette\Utils\Html::el('span')
+										->addClass('inline-boolean')
+										->addClass('inline-boolean-false');
+								} else {
+									return \Nette\Utils\Html::el('span')
+										->addClass('inline-boolean')
+										->addClass('inline-boolean-true');
+								}
 							});
 				}
 			}

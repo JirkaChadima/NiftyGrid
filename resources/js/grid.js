@@ -59,6 +59,13 @@ $(function(){
 	$(document).on("submit", ".grid-gridForm", function(event){
 		var button = $(".grid-gridForm-clickedSubmit");
 		$(button).removeClass("grid-gridForm-clickedSubmit");
+		
+		var off = [];
+		$('input[type=checkbox]:not(:checked)', this).each(function () {
+			var $this = $(this);
+			off.push($this.attr('name') + '=off');
+		});
+		
 		if($(button).data("select")){
 			var selectName = $(button).data("select");
 			var option = $("select[name=\""+selectName+"\"] option:selected");
@@ -67,7 +74,7 @@ $(function(){
 				if(answer){
 					if($(option).hasClass("grid-ajax")){
 						event.preventDefault();
-						$.post(this.action, $(this).serialize()+"&"+$(button).attr("name")+"="+$(button).val());
+						$.post(this.action, $(this).serialize()+"&"+off.join('&')+"&"+$(button).attr("name")+"="+$(button).val());
 					}
 				}else{
 					return false;
@@ -75,12 +82,12 @@ $(function(){
 			}else{
 				if($(option).hasClass("grid-ajax")){
 					event.preventDefault();
-					$.post(this.action, $(this).serialize()+"&"+$(button).attr("name")+"="+$(button).val());
+					$.post(this.action, $(this).serialize()+"&"+off.join('&')+"&"+$(button).attr("name")+"="+$(button).val());
 				}
 			}
 		}else{
 			event.preventDefault();
-			$.post(this.action, $(this).serialize()+"&"+$(button).attr("name")+"="+$(button).val());
+			$.post(this.action, $(this).serialize()+"&"+off.join('&')+"&"+$(button).attr("name")+"="+$(button).val());
 		}
 	});
 
