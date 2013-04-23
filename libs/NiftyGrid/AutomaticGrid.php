@@ -425,8 +425,10 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 					$col->setTextEditable(true);
 					break;
 				case self::TYPE_TEXT: # text
-				case self::TYPE_NUMERIC: # text
 					$col->setTextEditable();
+					break;
+				case self::TYPE_NUMERIC: # text
+					$col->setNumericEditable();
 					break;
 				case self::TYPE_ENUM: # enum
 					$colOptions = (!empty($this->columnOptions[$column->getName()]) ? $this->columnOptions[$column->getName()] : array() );

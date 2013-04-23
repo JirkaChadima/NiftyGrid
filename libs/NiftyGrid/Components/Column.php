@@ -244,6 +244,19 @@ class Column extends \Nette\Application\UI\PresenterComponent {
 
 		return $this;
 	}
+	
+	public function setNumericEditable() {
+		if ($this->editable) {
+			throw new NiftyGrid\DuplicateEditableColumnException("Column $this->name is already editable.");
+		}
+
+		$input = $this->parent['gridForm'][$this->parent->name]['rowForm']->addText($this->name, NULL);
+		$input->getControlPrototype()->addClass("grid-editable")->setType("number");
+
+		$this->editable = TRUE;
+
+		return $this;
+	}
 
 	/**
 	 * @param array $values
