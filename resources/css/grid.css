@@ -120,7 +120,7 @@ form.grid-gridForm {
 .grid .grid-filter-form-active{
     background-color: #2fa4e7;
 }
-
+.grid .grid-filter-form input[type="number"], .grid .grid-edited-cell input[type="number"].grid-editable,
 .grid .grid-filter-form input[type="text"], .grid .grid-edited-cell input[type="text"].grid-editable{
     width:100%;
     color:#000;
