@@ -44,6 +44,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		'SMALLINT' => self::TYPE_NUMERIC,
 		'MEDIUMINT' => self::TYPE_NUMERIC,
 		'INT' => self::TYPE_NUMERIC,
+		'INT2' => self::TYPE_NUMERIC,
 		'INT4' => self::TYPE_NUMERIC,
 		'BIGINT' => self::TYPE_NUMERIC,
 		'BIT' => self::TYPE_BOOLEAN,
