@@ -167,6 +167,8 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 
 	/** @var array */
 	protected $globalButtonOptions;
+	
+	protected $booleanColumns = null;
 
 	public function __construct(\NiftyGrid\DataSource\IDataSource $source, array $columnOptions = array(), $rowButtonOptions = array(), $globalButtonOptions = array()) {
 		parent::__construct();
@@ -568,13 +570,16 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 			unset($values[$this->dataSource->getPrimaryKey()]);
 
 			foreach ($values as $colname => $val) {
+				if (array_key_exists($colname, $this->getBooleanColumns())) {
+					$values[$colname] = ($val === 'on');
+				}
 				$fullTableName = $this['columns']->components[$colname]->tableName;
 				if (!empty($this['columns']->components[$colname]) && !empty($fullTableName)) {
 					$values[$fullTableName] = $val;
 					unset($values[$colname]);
 				}
 			}
-
+			
 			try {
 				$this->dataSource->update($table, $values, $id);
 				$this->flashMessage(_('Row was updated.'), 'alert alert-success');
@@ -596,6 +601,9 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 			$table = $columns[0]->getTableName();
 
 			foreach ($values as $colname => $val) {
+				if (array_key_exists($colname, $this->getBooleanColumns())) {
+					$values[$colname] = ($val === 'on');
+				}
 				$fullTableName = $this['columns']->components[$colname]->tableName;
 				if (!empty($this['columns']->components[$colname]) && !empty($fullTableName)) {
 					$values[$fullTableName] = $val;
@@ -743,6 +751,19 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 	public function disableDefaultOnDeleteRowCallback() {
 		$this->defaultDeleteRowCallbackEnabled = false;
 		return $this;
+	}
+	
+	private function getBooleanColumns() {
+		if ($this->booleanColumns === null) {
+			$columns = $this->dataSource->getColumns();
+			$this->booleanColumns = array();
+			foreach ($columns as $column) {
+				if ($this->getColumnType($column) === self::TYPE_BOOLEAN) {
+					$this->booleanColumns[$column->getName()] = true;
+				}
+			}
+		}
+		return $this->booleanColumns;
 	}
 
 }
