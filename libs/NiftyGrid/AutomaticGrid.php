@@ -381,8 +381,8 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 				}
 				if (!empty($options[self::LINK])) {
 					if (is_callable($options[self::LINK])) {
-						$button->setLink(function ($row) use ($self, $options) {
-									return call_user_func($options[$self::LINK], $row, $self);
+						$button->setLink(function () use ($self, $options) {
+									return call_user_func($options[$self::LINK], $self);
 								});
 					} else {
 						$button->setLink($options[self::LINK]);
