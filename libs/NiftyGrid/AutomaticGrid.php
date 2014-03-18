@@ -26,6 +26,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 
 	// types
 	const TYPE_NUMERIC = 'i';
+	const TYPE_DECIMAL = 'dec';
 	const TYPE_TEXT = 's';
 	const TYPE_LONGTEXT = 'ls';
 	const TYPE_BOOLEAN = 'b';
@@ -48,10 +49,13 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		'INT4' => self::TYPE_NUMERIC,
 		'BIGINT' => self::TYPE_NUMERIC,
 		'BIT' => self::TYPE_BOOLEAN,
-		'FLOAT' => self::TYPE_NUMERIC,
-		'NUMBER' => self::TYPE_NUMERIC,
-		'DOUBLE' => self::TYPE_NUMERIC,
-		'DECIMAL' => self::TYPE_NUMERIC,
+		'FLOAT' => self::TYPE_DECIMAL,
+		'FLOAT2' => self::TYPE_NUMERIC, // pgsql's real
+		'FLOAT4' => self::TYPE_NUMERIC, // pgsql's real
+		'NUMBER' => self::TYPE_DECIMAL,
+		'DOUBLE' => self::TYPE_DECIMAL,
+		'DECIMAL' => self::TYPE_DECIMAL,
+		'REAL' => self::TYPE_DECIMAL, // mysql's decimal, double and float
 		'CHAR' => self::TYPE_TEXT,
 		'VARCHAR' => self::TYPE_TEXT,
 		'VARCHAR2' => self::TYPE_TEXT,
@@ -172,7 +176,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 
 	public function __construct(\NiftyGrid\DataSource\IDataSource $source, array $columnOptions = array(), $rowButtonOptions = array(), $globalButtonOptions = array()) {
 		parent::__construct();
-		$this->types = array(self::TYPE_NUMERIC, self::TYPE_TEXT, self::TYPE_LONGTEXT, self::TYPE_BOOLEAN, self::TYPE_DATE, self::TYPE_DATETIME, self::TYPE_TIME, self::TYPE_BINARY, self::TYPE_ENUM);
+		$this->types = array(self::TYPE_NUMERIC, self::TYPE_DECIMAL, self::TYPE_TEXT, self::TYPE_LONGTEXT, self::TYPE_BOOLEAN, self::TYPE_DATE, self::TYPE_DATETIME, self::TYPE_TIME, self::TYPE_BINARY, self::TYPE_ENUM);
 		$this->columnOptions = $columnOptions;
 		$this->rowButtonOptions = $rowButtonOptions;
 		$this->globalButtonOptions = $globalButtonOptions;
@@ -435,6 +439,9 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 				case self::TYPE_NUMERIC: # text
 					$col->setNumericEditable();
 					break;
+				case self::TYPE_DECIMAL: # decimal
+					$col->setTextEditable();
+					break;
 				case self::TYPE_ENUM: # enum
 					$colOptions = (!empty($this->columnOptions[$column->getName()]) ? $this->columnOptions[$column->getName()] : array() );
 					if (!empty($colOptions[self::ENUM])) {
@@ -498,6 +505,9 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 					break;
 				case self::TYPE_NUMERIC: # numbers
 					$col->setNumericFilter();
+					break;
+				case self::TYPE_DECIMAL: # decimal
+					$col->setTextFilter();
 					break;
 				case self::TYPE_ENUM: # enum
 					$colOptions = (!empty($this->columnOptions[$column->getName()]) ? $this->columnOptions[$column->getName()] : array() );
