@@ -299,3 +299,33 @@ form.grid-gridForm {
 	text-align: center;
 	line-height: 200%;
 }
+
+.grid .grid-action-box {
+	margin-bottom: 0;
+}
+
+.grid .grid-action-box label {
+	float: left;
+	color: black;
+    font-size: 14px;
+	font-weight: bold;
+	color: #555;
+    line-height: 30px;
+	margin-bottom: 0;
+    margin-right: 10px;
+}
+
+.grid .grid-action-box select {
+	float: left;
+    height: 26px;
+    margin-top: 2px;
+	margin-bottom: 0;
+    border: 1px solid #ccc;
+}
+
+.grid .grid-action-box input[type="submit"] {
+    height: 26px;
+    padding-bottom: 2px;
+    margin-top: 2px;
+    margin-left:5px;
+}
