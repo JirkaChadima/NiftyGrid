@@ -102,8 +102,8 @@ class DibiFluentDataSource extends Nette\Object implements IDataSource {
 
 	public function filterData(array $filters) {
 		static $typeToModifier = array(
-	FilterCondition::NUMERIC => '%f',
-	FilterCondition::DATE => '%d',
+			FilterCondition::NUMERIC => '%f',
+			FilterCondition::DATE => '%d',
 		);
 
 		$where = array();

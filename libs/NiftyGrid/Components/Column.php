@@ -389,8 +389,17 @@ class Column extends \Nette\Application\UI\PresenterComponent {
 	 */
 	public function setNumericFilter() {
 		$input = $this->parent['gridForm'][$this->parent->name]['filter']->addText($this->name, $this->label . ":");
-		$input->getControlPrototype()->setType("number");
 		$this->filterType = FilterCondition::NUMERIC;
+
+		return $this;
+	}
+
+	/**
+	 * @return Column
+	 */
+	public function setDecimalFilter() {
+		$input = $this->parent['gridForm'][$this->parent->name]['filter']->addText($this->name, $this->label . ":");
+		$this->filterType = FilterCondition::DECIMAL;
 
 		return $this;
 	}

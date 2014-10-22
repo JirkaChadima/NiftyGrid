@@ -216,17 +216,17 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 		$columns = $this->dataSource->getColumns();
 		foreach ($columns as $column) {
 			$colOptions = (!empty($this->columnOptions[$column->getName()]) ? $this->columnOptions[$column->getName()] : array());
-			
+
 			if (!empty($colOptions[self::DISABLED])) {
 				continue;
 			}
-			
+
 			if (!empty($colOptions[self::ALIAS])) {
 				$name = $colOptions[self::ALIAS];
 			} else {
 				$name = \Nette\Utils\Strings::firstUpper($column->getName());
 			}
-			
+
 			$colName = $column->getName();
 			$col = $this->addColumn($colName, $name);
 
@@ -234,7 +234,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 			if (!empty($colOptions[self::WIDTH])) {
 				$col->setWidth($colOptions[self::WIDTH]);
 			}
-			
+
 			if (!empty($colOptions[self::TABLENAME])) {
 				$col->setTableName($colOptions[self::TABLENAME]);
 			}
@@ -507,7 +507,7 @@ class AutomaticGrid extends \NiftyGrid\Grid {
 					$col->setNumericFilter();
 					break;
 				case self::TYPE_DECIMAL: # decimal
-					$col->setTextFilter();
+					$col->setDecimalFilter();
 					break;
 				case self::TYPE_ENUM: # enum
 					$colOptions = (!empty($this->columnOptions[$column->getName()]) ? $this->columnOptions[$column->getName()] : array() );

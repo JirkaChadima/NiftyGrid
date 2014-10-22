@@ -19,6 +19,7 @@ class FilterCondition extends \Nette\Object
 	const TEXT = "text";
 	const SELECT = "select";
 	const NUMERIC = "numeric";
+	const DECIMAL = "decimal";
 	const DATE = "date";
 	const BOOLEAN = "boolean";
 
@@ -62,29 +63,32 @@ class FilterCondition extends \Nette\Object
 	 */
 	public static function getConditionsByType($type)
 	{
-		if($type == self::TEXT)
-			return array(
-				self::ENDSWITH => "%",
-				self::STARTSWITH => "%",
-			);
-		elseif($type == self::DATE)
-			return array(
-				self::DATE_EQUAL => "=",
-				self::DATE_DIFFERENT => "<>",
-				self::DATE_HIGHEREQUAL => ">=",
-				self::DATE_HIGHER => ">",
-				self::DATE_LOWEREQUAL => "<=",
-				self::DATE_LOWER => "<",
-			);
-		elseif($type == self::NUMERIC)
-			return array(
-				self::EQUAL => "=",
-				self::DIFFERENT => "<>",
-				self::HIGHEREQUAL => ">=",
-				self::HIGHER => ">",
-				self::LOWEREQUAL => "<=",
-				self::LOWER => "<",
-			);
+		switch ($type) {
+			case self::TEXT:
+				return array(
+					self::ENDSWITH => "%",
+					self::STARTSWITH => "%",
+				);
+			case self::DATE:
+				return array(
+					self::DATE_EQUAL => "=",
+					self::DATE_DIFFERENT => "<>",
+					self::DATE_HIGHEREQUAL => ">=",
+					self::DATE_HIGHER => ">",
+					self::DATE_LOWEREQUAL => "<=",
+					self::DATE_LOWER => "<",
+				);
+			case self::DECIMAL:
+			case self::NUMERIC:
+				return array(
+					self::EQUAL => "=",
+					self::DIFFERENT => "<>",
+					self::HIGHEREQUAL => ">=",
+					self::HIGHER => ">",
+					self::LOWEREQUAL => "<=",
+					self::LOWER => "<",
+				);
+		}
 	}
 
 	/**
@@ -96,12 +100,12 @@ class FilterCondition extends \Nette\Object
 	public static function prepareFilter($value, $type)
 	{
 		/* select nebo boolean muze byt pouze equal */
-		if($type == self::SELECT || $type == self::BOOLEAN)
+		if($type == self::SELECT || $type == self::BOOLEAN) {
 			return array(
 				"condition" => self::EQUAL,
 				"value" => $value
 			);
-		elseif($type == self::TEXT){
+		} elseif($type === self::TEXT) {
 			foreach(self::getConditionsByType(self::TEXT) as $name => $condition){
 					if(Strings::endsWith($value, $condition) && !Strings::startsWith($value, $condition) && $name == self::STARTSWITH)
 						return array(
@@ -118,8 +122,7 @@ class FilterCondition extends \Nette\Object
 				"condition" => self::CONTAINS,
 				"value" => $value
 			);
-		}
-		elseif($type == self::DATE){
+		} elseif($type === self::DATE) {
 			foreach(self::getConditionsByType(self::DATE) as $name => $condition){
 				if(Strings::startsWith($value, $condition))
 					return array(
@@ -131,8 +134,7 @@ class FilterCondition extends \Nette\Object
 				"condition" => self::DATE_EQUAL,
 				"value" => $value
 			);
-		}
-		elseif($type == self::NUMERIC){
+		} elseif($type === self::NUMERIC) {
 			foreach(self::getConditionsByType(self::NUMERIC) as $name => $condition){
 				if(Strings::startsWith($value, $condition))
 					return array(
@@ -143,6 +145,18 @@ class FilterCondition extends \Nette\Object
 			return array(
 				"condition" => self::EQUAL,
 				"value" => (int) $value
+			);
+		} elseif($type === self::DECIMAL) {
+			foreach(self::getConditionsByType(self::DECIMAL) as $name => $condition){
+				if(Strings::startsWith($value, $condition))
+					return array(
+						"condition" => $name,
+						"value" => (float) Strings::substring($value, Strings::length($condition))
+					);
+			}
+			return array(
+				"condition" => self::EQUAL,
+				"value" => (float) $value
 			);
 		}
 	}
