@@ -143,7 +143,7 @@
 	<tfoot>
 		<tr n:if="$control->hasActionForm()" >
 			<td colspan="{$colsCount}">
-				<span n:if="$control->hasActionForm()" class="grid-action-box">
+				<span n:if="$control->hasActionForm()" class="grid-action-box well well-small pull-right">
 						{$control['gridForm'][$control->name]['action']['action_name']->label}
 						{$control['gridForm'][$control->name]['action']['action_name']->getControl()}
 						{$control['gridForm'][$control->name]['action']['send']->getControl()}

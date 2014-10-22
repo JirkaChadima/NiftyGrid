@@ -723,14 +723,16 @@ abstract class Grid extends \Nette\Application\UI\Control {
 
 		$form[$this->name]->addContainer("filter");
 		$form[$this->name]['filter']->addSubmit("send", _("Filter"))
-				->setValidationScope(FALSE);
-		$form[$this->name]['filter']['send']->getControlPrototype()->addClass('btn btn-primary btn-small');
+				->setValidationScope(FALSE)
+				->getControlPrototype()
+				->addClass('btn btn-primary btn-small');
 
 		$form[$this->name]->addContainer("action");
-		$form[$this->name]['action']->addSelect("action_name", _("Mark:"));
+		$form[$this->name]['action']->addSelect("action_name", _("Marked:"));
 		$form[$this->name]['action']->addSubmit("send", _("Confirm"))
 				->setValidationScope(FALSE)
 				->getControlPrototype()
+				->addClass('btn btn-primary btn-small')
 				->addData("select", $form[$this->name]["action"]["action_name"]->getControl()->name);
 
 		$form[$this->name]->addContainer('perPage');
