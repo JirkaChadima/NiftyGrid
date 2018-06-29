@@ -1,6 +1,8 @@
 NiftyGrid/Automatic
 ===================
 
+**This package is unmaintained, contact me at chadima.jiri@gmail.com if you'd like to take over**
+
 This fork brings an AutomaticGrid class to the NiftyGrid package.
 
 **WARNING** - I had to extend the ``IDataSource`` interface!
